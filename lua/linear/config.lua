@@ -1,6 +1,39 @@
+---@class linear.FilterConfig
+---@field assignee string
+---@field states string[]
+
+---@class linear.TelescopeConfig
+---@field theme string
+---@field previewer boolean
+
+---@class linear.DetailsConfig
+---@field window_type string
+---@field width number
+---@field height number
+
+---@class linear.UIConfig
+---@field telescope linear.TelescopeConfig
+---@field details linear.DetailsConfig
+
+---@class linear.KeymapsConfig
+---@field list_issues string
+---@field create_issue string
+---@field close string
+---@field update_status string
+---@field add_comment string
+
+---@class linear.Config
+---@field api_key? string
+---@field default_filters linear.FilterConfig
+---@field ui linear.UIConfig
+---@field keymaps linear.KeymapsConfig
+
+---@class linear.InternalConfig : linear.Config
+---@field api_key? string
+
 local M = {}
 
--- Default configuration
+---@type linear.InternalConfig
 local defaults = {
 	api_key = nil,
 	default_filters = {
@@ -27,9 +60,11 @@ local defaults = {
 	},
 }
 
+---@type linear.InternalConfig
 local config = vim.deepcopy(defaults)
 
--- Get API key from various sources
+---Get API key from various sources
+---@return string?
 local function get_api_key()
 	-- 1. Check if explicitly set in config
 	if config.api_key then
@@ -63,20 +98,24 @@ local function get_api_key()
 	return nil
 end
 
--- Setup function to configure the plugin
-M.setup = function(opts)
+---Setup function to configure the plugin
+---@param opts? linear.Config
+---@return linear.InternalConfig
+function M.setup(opts)
 	opts = opts or {}
-	config = vim.tbl_deep_extend("force", config, opts)
+	config = vim.tbl_deep_extend("force", config, opts) --[[@as linear.InternalConfig]]
 	return config
 end
 
--- Get current configuration
-M.get = function()
+---Get current configuration
+---@return linear.InternalConfig
+function M.get()
 	return config
 end
 
--- Get API key with validation
-M.get_api_key = function()
+---Get API key with validation
+---@return string?
+function M.get_api_key()
 	local key = get_api_key()
 	if not key then
 		vim.notify(

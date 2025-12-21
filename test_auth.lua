@@ -59,8 +59,8 @@ print("Testing Linear.nvim authentication...")
 print("LINEAR_API_KEY env var: " .. (os.getenv("LINEAR_API_KEY") or "NOT SET"))
 
 -- Try to load config
-local status, config = pcall(require, "linear.config")
-if not status then
+local config_status, config = pcall(require, "linear.config")
+if not config_status then
 	print("ERROR: Could not load config module")
 	print(config)
 	os.exit(1)
@@ -78,8 +78,8 @@ else
 end
 
 -- Try to load API module
-local status, api = pcall(require, "linear.api")
-if not status then
+local api_status, api = pcall(require, "linear.api")
+if not api_status then
 	print("ERROR: Could not load API module")
 	print(api)
 	os.exit(1)

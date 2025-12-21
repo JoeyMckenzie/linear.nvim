@@ -1,7 +1,31 @@
+---@class linear.Issue
+---@field id string
+---@field identifier string
+---@field title string
+---@field description string
+---@field state {name: string, color: string}
+---@field priority integer
+---@field assignee {name: string}?
+---@field createdAt string
+---@field updatedAt string
+
+---@class linear.IssueFields
+---@field identifier string
+---@field title string
+---@field state string
+---@field priority string
+---@field assignee string
+---@field created string
+---@field updated string
+---@field description string
+
+---@class LinearUtils
 local M = {}
 
--- Format issue display string
-M.format_issue = function(issue)
+---Format issue for display in a list
+---@param issue linear.Issue?
+---@return string
+function M.format_issue(issue)
 	if not issue then
 		return ""
 	end
@@ -20,25 +44,59 @@ M.format_issue = function(issue)
 	)
 end
 
--- Format issue detail view
-M.format_issue_detail = function(issue)
+---Get state name safely
+---@param state {name: string, color: string}?
+---@return string
+local function get_state_name(state)
+	return state and state.name or "Unknown"
+end
+
+---Get assignee name safely
+---@param assignee {name: string}?
+---@return string
+local function get_assignee_name(assignee)
+	return assignee and assignee.name or "Unassigned"
+end
+
+---Extract issue fields with defaults
+---@param issue linear.Issue
+---@return linear.IssueFields
+local function extract_issue_fields(issue)
+	return {
+		identifier = issue.identifier or "N/A",
+		title = issue.title or "",
+		state = get_state_name(issue.state),
+		priority = tostring(issue.priority or 0),
+		assignee = get_assignee_name(issue.assignee),
+		created = issue.createdAt or "",
+		updated = issue.updatedAt or "",
+		description = issue.description or "(No description)",
+	}
+end
+
+---Format issue for detailed view
+---@param issue linear.Issue?
+---@return string
+function M.format_issue_detail(issue)
 	if not issue then
 		return ""
 	end
 
+	local fields = extract_issue_fields(issue)
+
 	local lines = {
 		"",
-		"Issue: " .. (issue.identifier or "N/A"),
-		"Title: " .. (issue.title or ""),
-		"State: " .. (issue.state and issue.state.name or "Unknown"),
-		"Priority: " .. tostring(issue.priority or 0),
-		"Assignee: " .. (issue.assignee and issue.assignee.name or "Unassigned"),
-		"Created: " .. (issue.createdAt or ""),
-		"Updated: " .. (issue.updatedAt or ""),
+		"Issue: " .. fields.identifier,
+		"Title: " .. fields.title,
+		"State: " .. fields.state,
+		"Priority: " .. fields.priority,
+		"Assignee: " .. fields.assignee,
+		"Created: " .. fields.created,
+		"Updated: " .. fields.updated,
 		"",
 		"Description:",
 		"---",
-		issue.description or "(No description)",
+		fields.description,
 		"---",
 		"",
 	}
@@ -46,8 +104,10 @@ M.format_issue_detail = function(issue)
 	return table.concat(lines, "\n")
 end
 
--- Convert priority number to label
-M.priority_label = function(priority)
+---Convert priority number to label
+---@param priority integer The priority number
+---@return string
+function M.priority_label(priority)
 	local labels = {
 		[0] = "None",
 		[1] = "Urgent",
@@ -58,8 +118,10 @@ M.priority_label = function(priority)
 	return labels[priority] or "Unknown"
 end
 
--- Parse ISO date to readable format
-M.format_date = function(iso_date)
+---Parse ISO date to readable format
+---@param iso_date string?
+---@return string
+function M.format_date(iso_date)
 	if not iso_date then
 		return "N/A"
 	end
@@ -67,14 +129,19 @@ M.format_date = function(iso_date)
 	return iso_date:sub(1, 10)
 end
 
--- Notify user with message
-M.notify = function(msg, level)
+---Notify user with message
+---@param msg string The message to display
+---@param level? integer The notification level (vim.log.levels)
+---@return void
+function M.notify(msg, level)
 	level = level or vim.log.levels.INFO
 	vim.notify("Linear.nvim: " .. msg, level)
 end
 
--- Check if string is empty or nil
-M.is_empty = function(s)
+---Check if string is empty or nil
+---@param s string?
+---@return boolean
+function M.is_empty(s)
 	return s == nil or s == ""
 end
 

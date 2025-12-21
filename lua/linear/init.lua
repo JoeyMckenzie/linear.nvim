@@ -1,13 +1,20 @@
+---@type any
 local config = require("linear.config")
+---@type any
 local api = require("linear.api")
+---@type any
 local commands = require("linear.commands")
 
+---@class LinearModule
 local M = {}
 
+---@type boolean
 local initialized = false
 
--- Setup function - called from plugin/linear.lua
-M.setup = function(opts)
+---Setup function - called from plugin/linear.lua
+---@param opts? linear.Config User configuration options
+---@return void
+function M.setup(opts)
 	if initialized then
 		return
 	end

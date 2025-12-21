@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/sumneko/lua-language-server/master/locale/en-us/config.schema.json",
+  "runtime.version": "Lua 5.1",
+  "runtime.path": ["lua", "?/init.lua", "?/?.lua"],
+  "diagnostics.globals": ["vim"],
+  "diagnostics.severity": {
+    "redefined-local": "information"
+  },
+  "workspace.ignoreDir": [".git", ".claude"],
+  "workspace.library": {},
+  "completion.callSnippet": "Both",
+  "completion.postfix": "@",
+  "telemetry.enable": false
+}

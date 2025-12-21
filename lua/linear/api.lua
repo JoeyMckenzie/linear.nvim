@@ -1,21 +1,36 @@
+---@type any
 local curl = require("plenary.curl")
+---
+---@type any
 local config = require("linear.config")
 
+---@alias APICallback fun(data: table|nil, error: string|nil): void
+
+---@class LinearAPI
 local M = {}
 
+---@type string?
 local api_key = nil
+
+---@type string
 local base_url = "https://api.linear.app/graphql"
 
--- Initialize API with key
-M.setup = function(key)
+---Initialize API with key
+---@param key? string The Linear API key
+---@return void
+function M.setup(key)
 	api_key = key or config.get_api_key()
 	if not api_key then
 		error("Linear.nvim: API key is required")
 	end
 end
 
--- Make a GraphQL request
-M.query = function(query_str, variables, callback)
+---Make a GraphQL request to Linear API
+---@param query_str string The GraphQL query or mutation
+---@param variables? table GraphQL variables
+---@param callback APICallback Callback with (data, error)
+---@return void
+function M.query(query_str, variables, callback)
 	if not api_key then
 		callback(nil, "API not initialized. Call M.setup(api_key) first")
 		return
@@ -35,45 +50,49 @@ M.query = function(query_str, variables, callback)
 		timeout = 30000,
 	})
 
-	request:after(function(result)
-		if result.status ~= 200 then
-			local error_msg = "HTTP " .. result.status
-			if result.body then
-				error_msg = error_msg .. ": " .. result.body
+	request
+		:after(function(result)
+			if result.status ~= 200 then
+				local error_msg = "HTTP " .. result.status
+				if result.body then
+					error_msg = error_msg .. ": " .. result.body
+				end
+				callback(nil, error_msg)
+				return
 			end
-			callback(nil, error_msg)
-			return
-		end
 
-		if not result.body then
-			callback(nil, "Empty response from Linear API")
-			return
-		end
-
-		local ok, response = pcall(vim.json.decode, result.body)
-		if not ok then
-			callback(nil, "Failed to parse response: " .. response)
-			return
-		end
-
-		-- Check for GraphQL errors
-		if response.errors then
-			local error_msgs = {}
-			for _, err in ipairs(response.errors) do
-				table.insert(error_msgs, err.message or tostring(err))
+			if not result.body then
+				callback(nil, "Empty response from Linear API")
+				return
 			end
-			callback(nil, table.concat(error_msgs, ", "))
-			return
-		end
 
-		callback(response.data, nil)
-	end):catch(function(err)
-		callback(nil, "Request failed: " .. tostring(err))
-	end)
+			local ok, response = pcall(vim.json.decode, result.body)
+			if not ok then
+				callback(nil, "Failed to parse response: " .. response)
+				return
+			end
+
+			-- Check for GraphQL errors
+			if response.errors then
+				local error_msgs = {}
+				for _, err in ipairs(response.errors) do
+					table.insert(error_msgs, err.message or tostring(err))
+				end
+				callback(nil, table.concat(error_msgs, ", "))
+				return
+			end
+
+			callback(response.data, nil)
+		end)
+		:catch(function(err)
+			callback(nil, "Request failed: " .. tostring(err))
+		end)
 end
 
--- Convenience wrapper: Get current viewer (for auth test)
-M.get_viewer = function(callback)
+---Get current viewer (authenticated user)
+---@param callback fun(data: {viewer: {id: string, name: string, email: string}}|nil, error: string|nil): void
+---@return void
+function M.get_viewer(callback)
 	local query = [[
     query Me {
       viewer {
@@ -86,8 +105,11 @@ M.get_viewer = function(callback)
 	M.query(query, {}, callback)
 end
 
--- Convenience wrapper: Get assigned issues
-M.get_issues = function(filters, callback)
+---Get assigned issues
+---@param filters? table Filter criteria
+---@param callback APICallback Callback with (data, error)
+---@return void
+function M.get_issues(filters, callback)
 	local query = [[
     query MyIssues($filter: IssueFilter, $first: Int) {
       issues(filter: $filter, first: $first) {
@@ -119,8 +141,11 @@ M.get_issues = function(filters, callback)
 	M.query(query, variables, callback)
 end
 
--- Get single issue
-M.get_issue = function(id, callback)
+---Get single issue by ID
+---@param id string The issue ID
+---@param callback APICallback Callback with (data, error)
+---@return void
+function M.get_issue(id, callback)
 	local query = [[
     query GetIssue($id: String!) {
       issue(id: $id) {
@@ -145,8 +170,11 @@ M.get_issue = function(id, callback)
 	M.query(query, { id = id }, callback)
 end
 
--- Create an issue
-M.create_issue = function(data, callback)
+---Create a new issue
+---@param data table Issue creation input
+---@param callback APICallback Callback with (data, error)
+---@return void
+function M.create_issue(data, callback)
 	local mutation = [[
     mutation CreateIssue($input: IssueCreateInput!) {
       issueCreate(input: $input) {
@@ -163,8 +191,12 @@ M.create_issue = function(data, callback)
 	M.query(mutation, { input = data }, callback)
 end
 
--- Update an issue
-M.update_issue = function(id, updates, callback)
+---Update an issue
+---@param id string The issue ID
+---@param updates table Issue update input
+---@param callback APICallback Callback with (data, error)
+---@return void
+function M.update_issue(id, updates, callback)
 	local mutation = [[
     mutation UpdateIssue($id: String!, $input: IssueUpdateInput!) {
       issueUpdate(id: $id, input: $input) {
@@ -184,8 +216,12 @@ M.update_issue = function(id, updates, callback)
 	M.query(mutation, { id = id, input = updates }, callback)
 end
 
--- Create a comment on an issue
-M.create_comment = function(issue_id, body, callback)
+---Create a comment on an issue
+---@param issue_id string The issue ID
+---@param body string The comment body
+---@param callback APICallback Callback with (data, error)
+---@return void
+function M.create_comment(issue_id, body, callback)
 	local mutation = [[
     mutation CreateComment($input: CommentCreateInput!) {
       commentCreate(input: $input) {
@@ -201,8 +237,10 @@ M.create_comment = function(issue_id, body, callback)
 	M.query(mutation, { input = { issueId = issue_id, body = body } }, callback)
 end
 
--- Get teams
-M.get_teams = function(callback)
+---Get all teams
+---@param callback APICallback Callback with (data, error)
+---@return void
+function M.get_teams(callback)
 	local query = [[
     query GetTeams {
       teams {
@@ -217,8 +255,10 @@ M.get_teams = function(callback)
 	M.query(query, {}, callback)
 end
 
--- Get issue states
-M.get_states = function(callback)
+---Get workflow states
+---@param callback APICallback Callback with (data, error)
+---@return void
+function M.get_states(callback)
 	local query = [[
     query GetStates {
       workflowStates {

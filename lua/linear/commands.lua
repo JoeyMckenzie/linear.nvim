@@ -1,10 +1,14 @@
+---@type any
 local api = require("linear.api")
+---@type any
 local utils = require("linear.utils")
 
+---@class LinearCommands
 local M = {}
 
--- Test authentication by querying viewer
-M.test_auth = function()
+---Test authentication by querying viewer
+---@return void
+function M.test_auth()
 	utils.notify("Testing authentication with Linear API...", vim.log.levels.INFO)
 
 	api.get_viewer(function(data, err)
@@ -25,8 +29,9 @@ M.test_auth = function()
 	end)
 end
 
--- Create a command to test auth
-M.setup_commands = function()
+---Setup user commands
+---@return void
+function M.setup_commands()
 	vim.api.nvim_create_user_command("LinearTestAuth", function()
 		M.test_auth()
 	end, {
