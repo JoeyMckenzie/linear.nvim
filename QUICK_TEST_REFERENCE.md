@@ -13,28 +13,28 @@ luarocks install busted
 ### Running Tests
 
 ```bash
-# Using make (recommended)
-make test
+# Using just (recommended)
+just test
 
 # Using busted directly
-busted
+busted tests/unit/*_spec.lua
 
 # Run specific test file
 busted tests/unit/config_spec.lua
 
 # Run with verbose output
-busted --verbose
+busted tests/unit/*_spec.lua --verbose
 
 # Run in TAP format (CI friendly)
-busted --output=TAP
+busted tests/unit/*_spec.lua --output=TAP
 ```
 
-**Note:** Busted automatically finds and runs all `*_spec.lua` files in the `tests/` directory.
+**Note:** Busted is configured to find tests in `tests/unit/*_spec.lua`.
 
 ## Run Tests in Watch Mode
 
 ```bash
-make test-watch
+just test-watch
 ```
 
 Watches `lua/` and `tests/` directories and re-runs tests on file changes.
@@ -92,34 +92,34 @@ print(utils.format_issue(mock_issue))
 ```
 tests/
 ├── minimal_init.lua        # Minimal Neovim init for tests
-├── run.lua                 # Test runner using plenary
+├── run.lua                 # Test runner (legacy, use busted instead)
 └── unit/
-    ├── config_spec.lua     # Tests for config module (27 tests)
-    ├── utils_spec.lua      # Tests for utils module (25 tests)
-    └── api_spec.lua        # Tests for API module (15 tests)
+    ├── config_spec.lua     # Tests for config module (18 tests)
+    ├── utils_spec.lua      # Tests for utils module (24 tests)
+    └── api_spec.lua        # Tests for API module (9 tests)
 ```
 
 ## Test Statistics
 
-- **Total Tests**: ~67
-- **Config Tests**: Config loading, merging, API key resolution
-- **Utils Tests**: Formatting, type conversions, validations
-- **API Tests**: Setup, query execution, error handling (with mocks)
+- **Total Tests**: 51
+- **Config Tests**: 18 tests - Config loading, merging, API key resolution
+- **Utils Tests**: 24 tests - Formatting, type conversions, validations
+- **API Tests**: 9 tests - Setup, query execution, error handling (with mocks)
 
 ## Code Quality Commands
 
 ```bash
 # Lint check
-make lint
+just lint
 
 # Type checking
-make type-check
+just type-check
 
 # Format code
-make format
+just format
 
 # Clean up
-make clean
+just clean
 ```
 
 ## Example Test Output

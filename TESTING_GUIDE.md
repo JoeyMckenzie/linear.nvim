@@ -8,16 +8,16 @@ This guide explains how to write and run unit and integration tests for linear.n
 
 ```bash
 # From the project directory
-make test
+just test
 
-# Or directly with Neovim
-nvim --headless -u NONE -c "luafile tests/run.lua"
+# Or directly with busted
+busted tests/unit/*_spec.lua
 ```
 
 ### Run Tests in Watch Mode
 
 ```bash
-make test-watch
+just test-watch
 ```
 
 The tests will re-run automatically whenever you save a file in `lua/` or `tests/`.
@@ -25,11 +25,11 @@ The tests will re-run automatically whenever you save a file in `lua/` or `tests
 ### Run Specific Tests
 
 ```bash
-# Run only unit tests
-make test-unit
-
 # Run a specific test file
-nvim --headless -u NONE -c "luafile tests/run.lua tests/unit/config_spec.lua"
+busted tests/unit/config_spec.lua
+
+# Run with verbose output
+busted tests/unit/*_spec.lua --verbose
 ```
 
 ## Test Structure
@@ -293,21 +293,21 @@ nvim --headless -u tests/minimal_init.lua -c "luafile tests/run.lua"
 nvim --headless -u NONE -c "luafile tests/run.lua" -c "qa!"
 ```
 
-### Using Make
+### Using Just
 
 ```bash
 # See all available commands
-make help
+just help
 
 # Run tests
-make test
+just test
 
 # Run in watch mode
-make test-watch
+just test-watch
 
 # Check code quality
-make lint
-make type-check
+just lint
+just type-check
 ```
 
 ## Test Coverage
