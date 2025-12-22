@@ -1,14 +1,10 @@
----@type any
 local config = require("linear.config")
----@type any
 local api = require("linear.api")
----@type any
 local commands = require("linear.commands")
 
 ---@class LinearModule
 local M = {}
 
----@type boolean
 local initialized = false
 
 ---Setup function - called from plugin/linear.lua

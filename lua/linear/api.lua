@@ -1,9 +1,11 @@
 ---@type any
 local curl
 local ok, curl_module = pcall(require, "plenary.curl")
+
 if ok then
 	curl = curl_module
 end
+
 ---
 ---@type any
 local config = require("linear.config")
