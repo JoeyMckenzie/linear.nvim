@@ -186,4 +186,44 @@ function M.priority_icon(priority)
 	return icons[priority] or ""
 end
 
+---Extract PR status from subtitle text
+---@param subtitle string The attachment subtitle
+---@return string PR status indicator
+local function extract_pr_status(subtitle)
+	local status_map = {
+		{ pattern = "merged", label = "merged" },
+		{ pattern = "closed", label = "closed" },
+		{ pattern = "draft", label = "draft" },
+		{ pattern = "open", label = "open" },
+	}
+
+	local lower = subtitle:lower()
+	for _, entry in ipairs(status_map) do
+		if lower:match(entry.pattern) then
+			return " [PR:" .. entry.label .. "]"
+		end
+	end
+
+	return subtitle ~= "" and " [PR:open]" or " [PR]"
+end
+
+---Get PR status indicator from issue attachments
+---@param attachments table? The attachments object { nodes: table[] }
+---@return string PR status indicator or empty string
+function M.pr_status(attachments)
+	if not attachments or not attachments.nodes then
+		return ""
+	end
+
+	for _, attachment in ipairs(attachments.nodes) do
+		local source = (attachment.sourceType or ""):lower()
+		local is_pr = source:match("github") or source:match("pull")
+		if is_pr then
+			return extract_pr_status(attachment.subtitle or "")
+		end
+	end
+
+	return ""
+end
+
 return M

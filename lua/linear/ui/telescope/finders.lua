@@ -17,8 +17,9 @@ local function format_issue_entry(issue, opts)
 	local state_name = issue.state and issue.state.name or nil
 	local status_icon = utils.status_icon(state_name)
 	local priority_icon = utils.priority_icon(issue.priority)
+	local pr_status = utils.pr_status(issue.attachments)
 
-	-- Build display string: {status} {priority} {identifier} - {title} [(assignee)]
+	-- Build display string: {status} {priority} {identifier} - {title} [(assignee)] [PR:status]
 	local parts = { status_icon }
 
 	if priority_icon ~= "" then
@@ -32,7 +33,7 @@ local function format_issue_entry(issue, opts)
 		table.insert(parts, "(" .. assignee .. ")")
 	end
 
-	local display = table.concat(parts, " ")
+	local display = table.concat(parts, " ") .. pr_status
 
 	return {
 		value = issue.id,

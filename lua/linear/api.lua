@@ -385,6 +385,14 @@ function M.get_issues_filtered(filter, _sort, limit, callback)
             id
             name
           }
+          attachments {
+            nodes {
+              sourceType
+              title
+              subtitle
+              url
+            }
+          }
           createdAt
           updatedAt
           url
@@ -483,6 +491,18 @@ function M.search_issues(query_text, limit, callback)
             color
           }
           priority
+          assignee {
+            id
+            name
+          }
+          attachments {
+            nodes {
+              sourceType
+              title
+              subtitle
+              url
+            }
+          }
           url
         }
         pageInfo {
@@ -563,6 +583,14 @@ function M.get_active_cycle(team_id, callback)
               assignee {
                 id
                 name
+              }
+              attachments {
+                nodes {
+                  sourceType
+                  title
+                  subtitle
+                  url
+                }
               }
               createdAt
               updatedAt
