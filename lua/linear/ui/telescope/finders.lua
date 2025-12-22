@@ -44,7 +44,7 @@ local function format_team_entry(team)
 	}
 end
 
----Helper to create a finder from async API call
+---Helper to create a finder from API call
 ---@param api_fn function API function to call
 ---@param entry_maker function Function to format entries
 ---@param cache_key string? Key for caching results
@@ -63,22 +63,18 @@ local function async_issues_finder(api_fn, entry_maker, cache_key)
 		})
 	end
 
-	-- Call API and populate results
+	-- Call API and populate results (plenary.curl is synchronous)
 	api_fn(function(data, err)
-		vim.schedule(function()
-			if err then
-				vim.notify("Linear.nvim: " .. err, vim.log.levels.ERROR)
-				results = {}
-			elseif data and data.issues and data.issues.nodes then
-				results = data.issues.nodes
-				if cache_key then
-					state.cache.issues[cache_key] = results
-					state.update_cache_time()
-				end
-			else
-				results = {}
+		if err then
+			vim.notify("Linear.nvim: " .. err, vim.log.levels.ERROR)
+		elseif data and data.issues and data.issues.nodes then
+			-- Populate results in-place (not reassign) so finder sees the data
+			vim.list_extend(results, data.issues.nodes)
+			if cache_key then
+				state.cache.issues[cache_key] = data.issues.nodes
+				state.update_cache_time()
 			end
-		end)
+		end
 	end)
 
 	return telescope_finders.new_table({
@@ -89,7 +85,7 @@ local function async_issues_finder(api_fn, entry_maker, cache_key)
 	})
 end
 
----Helper to create a finder from async API call (generic)
+---Helper to create a finder from API call (generic)
 ---@param api_fn function API function to call
 ---@param entry_maker function Function to format entries
 ---@param data_path string Path to data in response (e.g., "issues.nodes", "projects.nodes")
@@ -117,37 +113,35 @@ local function async_finder(api_fn, entry_maker, data_path, cache_key)
 		end
 	end
 
-	-- Call API and populate results
+	-- Call API and populate results (plenary.curl is synchronous)
 	api_fn(function(data, err)
-		vim.schedule(function()
-			if err then
-				vim.notify("Linear.nvim: " .. err, vim.log.levels.ERROR)
-				results = {}
-			elseif data then
-				-- Navigate to the data path (e.g., data.issues.nodes or data.projects.nodes)
-				local current = data
-				for part in data_path:gmatch("[^.]+") do
-					current = current[part]
-					if not current then
-						break
-					end
+		if err then
+			vim.notify("Linear.nvim: " .. err, vim.log.levels.ERROR)
+		elseif data then
+			-- Navigate to the data path (e.g., data.issues.nodes or data.projects.nodes)
+			local current = data
+			for part in data_path:gmatch("[^.]+") do
+				current = current[part]
+				if not current then
+					break
 				end
+			end
 
-				results = current or {}
+			if current then
+				-- Populate results in-place (not reassign) so finder sees the data
+				vim.list_extend(results, current)
 
 				-- Cache results
 				if cache_key then
 					if cache_field == "projects" then
-						state.cache.boards[cache_key] = results
+						state.cache.boards[cache_key] = current
 					elseif cache_field == "teams" then
-						state.cache.teams[cache_key] = results
+						state.cache.teams[cache_key] = current
 					end
 					state.update_cache_time()
 				end
-			else
-				results = {}
 			end
-		end)
+		end
 	end)
 
 	return telescope_finders.new_table({
@@ -219,17 +213,14 @@ end
 function finders.issues_search(query, _filter_opts)
 	local results = {}
 
+	-- plenary.curl is synchronous, so callback runs before return
 	api.search_issues(query, 50, function(data, err)
-		vim.schedule(function()
-			if err then
-				vim.notify("Linear.nvim: " .. err, vim.log.levels.ERROR)
-				results = {}
-			elseif data and data.issueSearch and data.issueSearch.nodes then
-				results = data.issueSearch.nodes
-			else
-				results = {}
-			end
-		end)
+		if err then
+			vim.notify("Linear.nvim: " .. err, vim.log.levels.ERROR)
+		elseif data and data.issueSearch and data.issueSearch.nodes then
+			-- Populate results in-place (not reassign) so finder sees the data
+			vim.list_extend(results, data.issueSearch.nodes)
+		end
 	end)
 
 	return telescope_finders.new_table({

@@ -53,7 +53,7 @@ local function handle_response(result, callback)
 		return
 	end
 
-	local decode_ok, response = pcall(vim.json.decode, result.body)
+	local decode_ok, response = pcall(vim.json.decode, result.body, { luanil = { object = true, array = true } })
 	if not decode_ok then
 		callback(nil, "Failed to parse response: " .. response)
 		return
