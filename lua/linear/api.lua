@@ -1,5 +1,9 @@
 ---@type any
-local curl = require("plenary.curl")
+local curl
+local ok, curl_module = pcall(require, "plenary.curl")
+if ok then
+	curl = curl_module
+end
 ---
 ---@type any
 local config = require("linear.config")
@@ -36,6 +40,11 @@ function M.query(query_str, variables, callback)
 		return
 	end
 
+	if not curl then
+		callback(nil, "plenary.nvim is not installed. Please install it with your plugin manager")
+		return
+	end
+
 	local body = vim.json.encode({
 		query = query_str,
 		variables = variables or {},
@@ -49,6 +58,11 @@ function M.query(query_str, variables, callback)
 		body = body,
 		timeout = 30000,
 	})
+
+	if not request then
+		callback(nil, "Failed to initialize HTTP request. Is plenary.nvim properly installed?")
+		return
+	end
 
 	request
 		:after(function(result)
@@ -66,8 +80,8 @@ function M.query(query_str, variables, callback)
 				return
 			end
 
-			local ok, response = pcall(vim.json.decode, result.body)
-			if not ok then
+			local decode_ok, response = pcall(vim.json.decode, result.body)
+			if not decode_ok then
 				callback(nil, "Failed to parse response: " .. response)
 				return
 			end
