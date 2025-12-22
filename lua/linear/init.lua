@@ -30,10 +30,7 @@ function M.setup(opts)
 		initialized = true
 		vim.notify("Linear.nvim initialized successfully", vim.log.levels.INFO)
 	else
-		vim.notify(
-			"Linear.nvim: Could not initialize - no API key found",
-			vim.log.levels.WARN
-		)
+		vim.notify("Linear.nvim: Could not initialize - no API key found", vim.log.levels.WARN)
 	end
 end
 

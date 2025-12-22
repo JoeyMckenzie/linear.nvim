@@ -29,6 +29,49 @@ function M.setup(key)
 	end
 end
 
+---Handle GraphQL response
+---@param result table The HTTP response
+---@param callback APICallback Callback with (data, error)
+---@return void
+local function handle_response(result, callback)
+	if not result then
+		callback(nil, "No response from Linear API")
+		return
+	end
+
+	if result.status and result.status ~= 200 then
+		local error_msg = "HTTP " .. result.status
+		if result.body then
+			error_msg = error_msg .. ": " .. result.body
+		end
+		callback(nil, error_msg)
+		return
+	end
+
+	if not result.body then
+		callback(nil, "Empty response from Linear API")
+		return
+	end
+
+	local decode_ok, response = pcall(vim.json.decode, result.body)
+	if not decode_ok then
+		callback(nil, "Failed to parse response: " .. response)
+		return
+	end
+
+	-- Check for GraphQL errors
+	if response.errors then
+		local error_msgs = {}
+		for _, err in ipairs(response.errors) do
+			table.insert(error_msgs, err.message or tostring(err))
+		end
+		callback(nil, table.concat(error_msgs, ", "))
+		return
+	end
+
+	callback(response.data, nil)
+end
+
 ---Make a GraphQL request to Linear API
 ---@param query_str string The GraphQL query or mutation
 ---@param variables? table GraphQL variables
@@ -45,11 +88,18 @@ function M.query(query_str, variables, callback)
 		return
 	end
 
-	local body = vim.json.encode({
+	-- Build request body
+	local body_table = {
 		query = query_str,
-		variables = variables or {},
-	})
+	}
+	-- Only include variables if provided and non-empty
+	if variables and next(variables) then
+		body_table.variables = variables
+	end
+	local body = vim.json.encode(body_table)
 
+	-- Make the request
+	-- Note: Linear API expects the API key directly, not as a Bearer token
 	local request = curl.post(base_url, {
 		headers = {
 			["Content-Type"] = "application/json",
@@ -64,43 +114,26 @@ function M.query(query_str, variables, callback)
 		return
 	end
 
-	request
-		:after(function(result)
-			if result.status ~= 200 then
-				local error_msg = "HTTP " .. result.status
-				if result.body then
-					error_msg = error_msg .. ": " .. result.body
-				end
-				callback(nil, error_msg)
-				return
-			end
-
-			if not result.body then
-				callback(nil, "Empty response from Linear API")
-				return
-			end
-
-			local decode_ok, response = pcall(vim.json.decode, result.body)
-			if not decode_ok then
-				callback(nil, "Failed to parse response: " .. response)
-				return
-			end
-
-			-- Check for GraphQL errors
-			if response.errors then
-				local error_msgs = {}
-				for _, err in ipairs(response.errors) do
-					table.insert(error_msgs, err.message or tostring(err))
-				end
-				callback(nil, table.concat(error_msgs, ", "))
-				return
-			end
-
-			callback(response.data, nil)
+	-- Check if we got a response directly (synchronous) or a request builder (asynchronous)
+	if request.after and type(request.after) == "function" then
+		-- Asynchronous API with callbacks
+		local request_ok, request_err = pcall(function()
+			request
+				:after(function(result)
+					handle_response(result, callback)
+				end)
+				:catch(function(err)
+					callback(nil, "Request failed: " .. tostring(err))
+				end)
 		end)
-		:catch(function(err)
-			callback(nil, "Request failed: " .. tostring(err))
-		end)
+
+		if not request_ok then
+			callback(nil, "Error setting up request handlers: " .. tostring(request_err))
+		end
+	else
+		-- Synchronous API - response is returned directly
+		handle_response(request, callback)
+	end
 end
 
 ---Get current viewer (authenticated user)
@@ -286,6 +319,216 @@ function M.get_states(callback)
   ]]
 
 	M.query(query, {}, callback)
+end
+
+---Get projects/boards for navigation
+---@param callback APICallback Callback with (data, error)
+---@return void
+function M.get_projects(callback)
+	local query = [[
+    query GetProjects {
+      projects {
+        nodes {
+          id
+          name
+          description
+          icon
+          url
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  ]]
+
+	M.query(query, {}, callback)
+end
+
+---Get issues with filtering and sorting
+---@param filter table Filter criteria
+---@param sort table Sort configuration
+---@param limit number Max results
+---@param callback APICallback Callback with (data, error)
+---@return void
+function M.get_issues_filtered(filter, _sort, limit, callback)
+	limit = limit or 50
+	filter = filter or {}
+
+	local query = [[
+    query GetIssuesFiltered($filter: IssueFilter, $first: Int) {
+      issues(filter: $filter, first: $first) {
+        nodes {
+          id
+          identifier
+          title
+          description
+          state {
+            id
+            name
+            color
+          }
+          priority
+          assignee {
+            id
+            name
+            avatarUrl
+          }
+          project {
+            id
+            name
+          }
+          team {
+            id
+            name
+          }
+          createdAt
+          updatedAt
+          url
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  ]]
+
+	local variables = {
+		filter = filter,
+		first = limit,
+	}
+
+	M.query(query, variables, callback)
+end
+
+---Get full issue details including comments
+---@param issue_id string Issue ID
+---@param callback APICallback Callback with (data, error)
+---@return void
+function M.get_issue_full(issue_id, callback)
+	local query = [[
+    query GetIssueFull($id: String!) {
+      issue(id: $id) {
+        id
+        identifier
+        title
+        description
+        state {
+          id
+          name
+          color
+        }
+        priority
+        assignee {
+          id
+          name
+          email
+          avatarUrl
+        }
+        project {
+          id
+          name
+        }
+        team {
+          id
+          name
+        }
+        createdAt
+        updatedAt
+        url
+        comments(first: 10) {
+          nodes {
+            id
+            body
+            user {
+              id
+              name
+              avatarUrl
+            }
+            createdAt
+          }
+        }
+      }
+    }
+  ]]
+
+	local variables = { id = issue_id }
+
+	M.query(query, variables, callback)
+end
+
+---Search issues by text query
+---@param query_text string Search query
+---@param limit number Max results
+---@param callback APICallback Callback with (data, error)
+---@return void
+function M.search_issues(query_text, limit, callback)
+	limit = limit or 50
+
+	local query = [[
+    query SearchIssues($query: String!, $first: Int) {
+      issueSearch(query: $query, first: $first) {
+        nodes {
+          id
+          identifier
+          title
+          description
+          state {
+            id
+            name
+            color
+          }
+          priority
+          url
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  ]]
+
+	local variables = {
+		query = query_text,
+		first = limit,
+	}
+
+	M.query(query, variables, callback)
+end
+
+---Update an issue
+---@param issue_id string Issue ID
+---@param updates table Fields to update
+---@param callback APICallback Callback with (data, error)
+---@return void
+function M.update_issue(issue_id, updates, callback)
+	local query = [[
+    mutation UpdateIssue($id: String!, $input: IssueUpdateInput!) {
+      issueUpdate(id: $id, input: $input) {
+        issue {
+          id
+          identifier
+          title
+          state {
+            id
+            name
+          }
+          priority
+          updatedAt
+        }
+      }
+    }
+  ]]
+
+	local variables = {
+		id = issue_id,
+		input = updates,
+	}
+
+	M.query(query, variables, callback)
 end
 
 return M

@@ -33,5 +33,18 @@ files["run_tests.lua"] = {
 	std = "lua51+nvim",
 }
 
+-- UI module (has stubs with unused arguments)
+files["lua/linear/ui/**"] = {
+	std = "lua51+nvim",
+	ignore = { "211", "212", "213", "221", "542" },  -- unused functions, args, variables, empty blocks
+	max_cyclomatic_complexity = 50,    -- allow complex finders
+}
+
+-- Phase 2 manual test file (has complex formatting helpers)
+files["test_phase2.lua"] = {
+	std = "lua51+nvim",
+	max_cyclomatic_complexity = 50,    -- test file with formatting functions
+}
+
 -- Ignore Makefile (not Lua)
 files["Makefile"] = {}
