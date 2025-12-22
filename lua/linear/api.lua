@@ -531,4 +531,46 @@ function M.update_issue(issue_id, updates, callback)
 	M.query(query, variables, callback)
 end
 
+---Get active cycle for a team
+---@param team_id string Team ID
+---@param callback APICallback Callback with (data, error)
+---@return void
+function M.get_active_cycle(team_id, callback)
+	local query = [[
+    query GetActiveCycle($teamId: String!) {
+      team(id: $teamId) {
+        id
+        name
+        activeCycle {
+          id
+          name
+          startsAt
+          endsAt
+          issues {
+            nodes {
+              id
+              identifier
+              title
+              description
+              state {
+                id
+                name
+                color
+              }
+              priority
+              assignee {
+                id
+                name
+              }
+              url
+            }
+          }
+        }
+      }
+    }
+  ]]
+
+	M.query(query, { teamId = team_id }, callback)
+end
+
 return M
