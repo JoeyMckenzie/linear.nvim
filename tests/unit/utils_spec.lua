@@ -230,4 +230,32 @@ describe("linear.utils", function()
 			vim.notify = original_notify
 		end)
 	end)
+
+	describe("status_icon", function()
+		it("returns white circle for backlog/todo states", function()
+			assert.equals("⚪", utils.status_icon("Backlog"))
+			assert.equals("⚪", utils.status_icon("Todo"))
+		end)
+
+		it("returns yellow circle for in progress", function()
+			assert.equals("🟡", utils.status_icon("In Progress"))
+		end)
+
+		it("returns blue circle for in review", function()
+			assert.equals("🔵", utils.status_icon("In Review"))
+		end)
+
+		it("returns green circle for done", function()
+			assert.equals("🟢", utils.status_icon("Done"))
+		end)
+
+		it("returns black circle for canceled", function()
+			assert.equals("⚫", utils.status_icon("Canceled"))
+		end)
+
+		it("returns white circle for unknown states", function()
+			assert.equals("⚪", utils.status_icon("Unknown"))
+			assert.equals("⚪", utils.status_icon(nil))
+		end)
+	end)
 end)

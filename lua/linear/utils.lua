@@ -145,4 +145,27 @@ function M.is_empty(s)
 	return s == nil or s == ""
 end
 
+---Get status icon for display
+---@param state_name string? The state name
+---@return string
+function M.status_icon(state_name)
+	if not state_name then
+		return "⚪"
+	end
+
+	local name_lower = state_name:lower()
+
+	if name_lower:match("done") or name_lower:match("complete") then
+		return "🟢"
+	elseif name_lower:match("progress") or name_lower:match("started") then
+		return "🟡"
+	elseif name_lower:match("review") then
+		return "🔵"
+	elseif name_lower:match("cancel") then
+		return "⚫"
+	else
+		return "⚪"
+	end
+end
+
 return M
