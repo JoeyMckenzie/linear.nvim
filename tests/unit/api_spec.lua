@@ -1,3 +1,4 @@
+---@diagnostic disable: need-check-nil, undefined-field
 ---Mock curl module for testing
 ---@type any
 local mock_curl = {}

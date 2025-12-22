@@ -1,3 +1,4 @@
+---@diagnostic disable: duplicate-set-field, assign-type-mismatch
 ---@type any
 local utils = require("linear.utils")
 

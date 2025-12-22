@@ -73,7 +73,6 @@ end
 
 ---Create issues picker (assigned issues by default)
 ---@param opts table? Picker options
----@return void
 function M.issues(opts)
 	opts = opts or {}
 
@@ -100,7 +99,6 @@ end
 ---Create search picker
 ---@param query string? Initial search query
 ---@param opts table? Picker options
----@return void
 function M.search_issues(query, opts)
 	opts = opts or {}
 
@@ -126,7 +124,6 @@ end
 
 ---Create board/project picker
 ---@param opts table? Picker options
----@return void
 function M.board_picker(opts)
 	opts = opts or {}
 	opts.prompt_title = "Linear Boards/Projects"
@@ -163,7 +160,6 @@ end
 
 ---Create team picker
 ---@param opts table? Picker options
----@return void
 function M.team_picker(opts)
 	opts = opts or {}
 	opts.prompt_title = "Linear Teams"
@@ -200,7 +196,6 @@ end
 
 ---Create cycle picker (current sprint for selected team)
 ---@param opts table? Picker options { show_all: boolean, team_name: string? }
----@return void
 function M.cycle_picker(opts)
 	opts = opts or {}
 	local api = require("linear.api")
@@ -277,7 +272,6 @@ end
 ---Open cycle view for a specific team (internal)
 ---@param team table Team data
 ---@param show_all boolean Whether to show all team issues or just current user's
----@return void
 function M._open_cycle_for_team(team, show_all)
 	local api = require("linear.api")
 	local utils = require("linear.utils")

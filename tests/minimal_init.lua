@@ -1,8 +1,8 @@
+---@diagnostic disable: duplicate-set-field, redundant-return-value, need-check-nil, return-type-mismatch
 ---Minimal Neovim init for running tests
 ---Sets up the test environment without loading a full config
 
 ---Setup runtimepath
----@return void
 local function setup_runtimepath()
 	-- Only set runtimepath if vim.opt exists (running in Neovim)
 	if vim and vim.opt then
@@ -11,7 +11,6 @@ local function setup_runtimepath()
 end
 
 ---Setup test environment variables
----@return void
 local function setup_env()
 	-- Note: os.setenv is not available in Lua 5.1
 	-- Tests will use existing LINEAR_API_KEY environment variable
@@ -24,7 +23,6 @@ setup_runtimepath()
 setup_env()
 
 ---Setup vim.notify
----@return void
 local function setup_notify()
 	if not vim.notify then
 		vim.notify = function(msg, _level)
@@ -34,7 +32,6 @@ local function setup_notify()
 end
 
 ---Setup vim.log levels
----@return void
 local function setup_log()
 	if not vim.log or not vim.log.levels then
 		vim.log = {
@@ -50,7 +47,6 @@ local function setup_log()
 end
 
 ---Setup vim.api
----@return void
 local function setup_api()
 	if not vim.api or not vim.api.nvim_create_user_command then
 		vim.api = vim.api or {}
@@ -61,7 +57,6 @@ local function setup_api()
 end
 
 ---Setup vim.fn utilities
----@return void
 local function setup_fn()
 	if not vim.fn then
 		vim.fn = {}
@@ -207,7 +202,6 @@ local function simple_json_decode(json_str)
 end
 
 ---Setup vim.json utilities
----@return void
 local function setup_json()
 	if not vim.json or not vim.json.encode then
 		vim.json = vim.json or {}
@@ -245,7 +239,6 @@ local function setup_json()
 end
 
 ---Setup vim.tbl utilities
----@return void
 local function setup_tbl()
 	if not vim.tbl_deep_extend then
 		vim.tbl_deep_extend = function(mode, tbl1, tbl2)
@@ -285,7 +278,6 @@ local function setup_tbl()
 end
 
 ---Setup vim.deepcopy utility
----@return void
 local function setup_deepcopy()
 	if not vim.deepcopy then
 		vim.deepcopy = function(obj)

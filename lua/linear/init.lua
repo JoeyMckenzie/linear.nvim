@@ -9,7 +9,6 @@ local initialized = false
 
 ---Setup function - called from plugin/linear.lua
 ---@param opts? linear.Config User configuration options
----@return void
 function M.setup(opts)
 	if initialized then
 		return

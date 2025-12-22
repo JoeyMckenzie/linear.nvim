@@ -21,7 +21,6 @@ end
 
 ---Open selected issue in browser
 ---@param prompt_bufnr number Telescope prompt buffer number
----@return void
 function M.open_in_browser(prompt_bufnr)
 	local selection = get_selection(prompt_bufnr)
 	if not selection or not selection.path then
@@ -48,7 +47,6 @@ end
 
 ---Copy issue identifier to clipboard
 ---@param prompt_bufnr number Telescope prompt buffer number
----@return void
 function M.copy_identifier(prompt_bufnr)
 	local selection = get_selection(prompt_bufnr)
 	if not selection or not selection._data then
@@ -62,7 +60,6 @@ end
 
 ---Copy issue URL to clipboard
 ---@param prompt_bufnr number Telescope prompt buffer number
----@return void
 function M.copy_url(prompt_bufnr)
 	local selection = get_selection(prompt_bufnr)
 	if not selection or not selection.path then
@@ -75,7 +72,6 @@ end
 
 ---Show detailed view of selected issue
 ---@param prompt_bufnr number Telescope prompt buffer number
----@return void
 function M.show_details(prompt_bufnr)
 	local selection = get_selection(prompt_bufnr)
 	if not selection or not selection._data then
@@ -90,7 +86,6 @@ end
 
 ---Toggle/change status of selected issue
 ---@param prompt_bufnr number Telescope prompt buffer number
----@return void
 function M.toggle_status(prompt_bufnr)
 	local selection = get_selection(prompt_bufnr)
 	if not selection or not selection._data then
@@ -148,7 +143,6 @@ end
 
 ---Navigate to board containing selected issue
 ---@param prompt_bufnr number Telescope prompt buffer number
----@return void
 function M.navigate_board(prompt_bufnr)
 	local selection = get_selection(prompt_bufnr)
 	if not selection or not selection._data or not selection._data.project then
@@ -173,7 +167,6 @@ function M.navigate_board(prompt_bufnr)
 end
 
 ---Navigate back to previous view
----@return void
 function M.navigate_back()
 	local previous_view = state.history["issues"]
 	if not previous_view then
@@ -190,7 +183,6 @@ function M.navigate_back()
 end
 
 ---Refresh current picker
----@return void
 function M.refresh()
 	-- Clear cache to force fresh data
 	state.clear_cache()

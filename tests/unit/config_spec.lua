@@ -1,3 +1,4 @@
+---@diagnostic disable: missing-fields
 ---@type any
 local config = require("linear.config")
 

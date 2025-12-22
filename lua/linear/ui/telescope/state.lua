@@ -31,13 +31,11 @@ M.history = {}
 
 ---Apply filters and merge with existing
 ---@param new_filters table New filters to apply
----@return void
 function M.apply_filters(new_filters)
 	M.current_filters = vim.tbl_deep_extend("force", M.current_filters, new_filters or {})
 end
 
 ---Reset filters to defaults
----@return void
 function M.reset_filters()
 	M.current_filters = {
 		assignee = "me",
@@ -51,7 +49,6 @@ end
 ---Switch to a different view
 ---@param view_name string Name of view to switch to
 ---@param context table? Context data for the view
----@return void
 function M.switch_view(view_name, context)
 	M.current_view = view_name
 	if context then
@@ -67,7 +64,6 @@ function M.get_view_context(view_name)
 end
 
 ---Clear cache
----@return void
 function M.clear_cache()
 	M.cache = {
 		issues = {},
@@ -84,7 +80,6 @@ function M.cache_valid()
 end
 
 ---Update cache timestamp
----@return void
 function M.update_cache_time()
 	M.cache.last_update = os.time()
 end

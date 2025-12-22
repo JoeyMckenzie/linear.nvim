@@ -1,26 +1,27 @@
 -- Configure Lua path for module discovery
 local lua_path = "./lua/?.lua;./lua/?/init.lua"
+
 if package.path:find(lua_path, 1, true) == nil then
-  package.path = lua_path .. ";" .. package.path
+	package.path = lua_path .. ";" .. package.path
 end
 
 -- Initialize vim global if not available (for testing outside Neovim)
 if not vim then
-  vim = {}
+	vim = {}
 end
 
 -- Load minimal test environment setup
 dofile("./tests/minimal_init.lua")
 
 return {
-  default = {
-    spec_pattern = "tests/unit/*_spec.lua",
-    verbose = true,
-    output = "utfTerminal",
-  },
-  ci = {
-    spec_pattern = "tests/unit/*_spec.lua",
-    verbose = true,
-    output = "TAP",
-  },
+	default = {
+		spec_pattern = "tests/unit/*_spec.lua",
+		verbose = true,
+		output = "utfTerminal",
+	},
+	ci = {
+		spec_pattern = "tests/unit/*_spec.lua",
+		verbose = true,
+		output = "TAP",
+	},
 }

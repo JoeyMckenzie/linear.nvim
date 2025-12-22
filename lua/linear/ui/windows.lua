@@ -51,7 +51,6 @@ end
 
 ---Show detailed view of an issue
 ---@param issue_data table Issue data with full details
----@return void
 function M.show_issue_detail(issue_data)
 	if not issue_data then
 		vim.notify("Linear.nvim: No issue data provided", vim.log.levels.WARN)
@@ -129,7 +128,6 @@ end
 ---@param _current_status string Current status name
 ---@param _states table Available states
 ---@param _callback function Callback when status is selected
----@return void
 function M.show_status_modal(_issue_id, _current_status, _states, _callback)
 	-- Uses vim.ui.select instead - implementation not needed
 end
@@ -137,13 +135,11 @@ end
 ---Show comment editor
 ---@param _issue_id string Issue ID
 ---@param _callback function Callback with comment text
----@return void
 function M.show_comment_editor(_issue_id, _callback)
 	-- Future implementation for adding comments
 end
 
 ---Close all linear UI windows
----@return void
 function M.close_all()
 	-- Close all floating windows related to linear
 	for _, winnr in ipairs(vim.api.nvim_list_wins()) do

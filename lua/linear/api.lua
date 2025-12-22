@@ -10,7 +10,7 @@ end
 ---@type any
 local config = require("linear.config")
 
----@alias APICallback fun(data: table|nil, error: string|nil): void
+---@alias APICallback fun(data: table|nil, error: string|nil)
 
 ---@class LinearAPI
 local M = {}
@@ -23,7 +23,6 @@ local base_url = "https://api.linear.app/graphql"
 
 ---Initialize API with key
 ---@param key? string The Linear API key
----@return void
 function M.setup(key)
 	api_key = key or config.get_api_key()
 	if not api_key then
@@ -34,7 +33,6 @@ end
 ---Handle GraphQL response
 ---@param result table The HTTP response
 ---@param callback APICallback Callback with (data, error)
----@return void
 local function handle_response(result, callback)
 	if not result then
 		callback(nil, "No response from Linear API")
@@ -78,7 +76,6 @@ end
 ---@param query_str string The GraphQL query or mutation
 ---@param variables? table GraphQL variables
 ---@param callback APICallback Callback with (data, error)
----@return void
 function M.query(query_str, variables, callback)
 	if not api_key then
 		callback(nil, "API not initialized. Call M.setup(api_key) first")
@@ -139,8 +136,7 @@ function M.query(query_str, variables, callback)
 end
 
 ---Get current viewer (authenticated user)
----@param callback fun(data: {viewer: {id: string, name: string, email: string}}|nil, error: string|nil): void
----@return void
+---@param callback fun(data: {viewer: {id: string, name: string, email: string}}|nil, error: string|nil)
 function M.get_viewer(callback)
 	local query = [[
     query Me {
@@ -157,7 +153,6 @@ end
 ---Get assigned issues
 ---@param filters? table Filter criteria
 ---@param callback APICallback Callback with (data, error)
----@return void
 function M.get_issues(filters, callback)
 	local query = [[
     query MyIssues($filter: IssueFilter, $first: Int) {
@@ -193,7 +188,6 @@ end
 ---Get single issue by ID
 ---@param id string The issue ID
 ---@param callback APICallback Callback with (data, error)
----@return void
 function M.get_issue(id, callback)
 	local query = [[
     query GetIssue($id: String!) {
@@ -222,7 +216,6 @@ end
 ---Create a new issue
 ---@param data table Issue creation input
 ---@param callback APICallback Callback with (data, error)
----@return void
 function M.create_issue(data, callback)
 	local mutation = [[
     mutation CreateIssue($input: IssueCreateInput!) {
@@ -240,36 +233,10 @@ function M.create_issue(data, callback)
 	M.query(mutation, { input = data }, callback)
 end
 
----Update an issue
----@param id string The issue ID
----@param updates table Issue update input
----@param callback APICallback Callback with (data, error)
----@return void
-function M.update_issue(id, updates, callback)
-	local mutation = [[
-    mutation UpdateIssue($id: String!, $input: IssueUpdateInput!) {
-      issueUpdate(id: $id, input: $input) {
-        success
-        issue {
-          id
-          identifier
-          title
-          state {
-            name
-          }
-        }
-      }
-    }
-  ]]
-
-	M.query(mutation, { id = id, input = updates }, callback)
-end
-
 ---Create a comment on an issue
 ---@param issue_id string The issue ID
 ---@param body string The comment body
 ---@param callback APICallback Callback with (data, error)
----@return void
 function M.create_comment(issue_id, body, callback)
 	local mutation = [[
     mutation CreateComment($input: CommentCreateInput!) {
@@ -288,7 +255,6 @@ end
 
 ---Get all teams
 ---@param callback APICallback Callback with (data, error)
----@return void
 function M.get_teams(callback)
 	local query = [[
     query GetTeams {
@@ -306,7 +272,6 @@ end
 
 ---Get workflow states
 ---@param callback APICallback Callback with (data, error)
----@return void
 function M.get_states(callback)
 	local query = [[
     query GetStates {
@@ -325,7 +290,6 @@ end
 
 ---Get projects/boards for navigation
 ---@param callback APICallback Callback with (data, error)
----@return void
 function M.get_projects(callback)
 	local query = [[
     query GetProjects {
@@ -350,10 +314,9 @@ end
 
 ---Get issues with filtering and sorting
 ---@param filter table Filter criteria
----@param sort table Sort configuration
+---@param _sort table? Sort configuration (unused)
 ---@param limit number Max results
 ---@param callback APICallback Callback with (data, error)
----@return void
 function M.get_issues_filtered(filter, _sort, limit, callback)
 	limit = limit or 50
 	filter = filter or {}
@@ -416,7 +379,6 @@ end
 ---Get full issue details including comments
 ---@param issue_id string Issue ID
 ---@param callback APICallback Callback with (data, error)
----@return void
 function M.get_issue_full(issue_id, callback)
 	local query = [[
     query GetIssueFull($id: String!) {
@@ -473,7 +435,6 @@ end
 ---@param query_text string Search query
 ---@param limit number Max results
 ---@param callback APICallback Callback with (data, error)
----@return void
 function M.search_issues(query_text, limit, callback)
 	limit = limit or 50
 
@@ -525,7 +486,6 @@ end
 ---@param issue_id string Issue ID
 ---@param updates table Fields to update
 ---@param callback APICallback Callback with (data, error)
----@return void
 function M.update_issue(issue_id, updates, callback)
 	local query = [[
     mutation UpdateIssue($id: String!, $input: IssueUpdateInput!) {
@@ -556,7 +516,6 @@ end
 ---Get active cycle for a team
 ---@param team_id string Team ID
 ---@param callback APICallback Callback with (data, error)
----@return void
 function M.get_active_cycle(team_id, callback)
 	local query = [[
     query GetActiveCycle($teamId: String!) {

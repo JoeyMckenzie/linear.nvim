@@ -2,7 +2,6 @@
 local M = {}
 
 ---Setup user commands
----@return void
 function M.setup_commands()
 	local pickers = require("linear.ui.telescope.pickers")
 

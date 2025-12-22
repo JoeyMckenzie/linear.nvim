@@ -1,3 +1,4 @@
+---@diagnostic disable: inject-field
 -- Set up the test environment
 vim.opt.rtp:prepend(".")
 

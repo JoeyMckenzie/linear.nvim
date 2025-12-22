@@ -132,7 +132,6 @@ end
 ---Notify user with message
 ---@param msg string The message to display
 ---@param level? integer The notification level (vim.log.levels)
----@return void
 function M.notify(msg, level)
 	level = level or vim.log.levels.INFO
 	vim.notify("Linear.nvim: " .. msg, level)
