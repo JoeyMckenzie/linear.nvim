@@ -66,6 +66,12 @@ function M.setup_commands()
 	end, {
 		desc = "Browse Linear teams",
 	})
+
+	vim.api.nvim_create_user_command("LinearCycle", function(_opts)
+		pickers.cycle_picker()
+	end, {
+		desc = "Browse current sprint/cycle issues for your team",
+	})
 end
 
 return M
