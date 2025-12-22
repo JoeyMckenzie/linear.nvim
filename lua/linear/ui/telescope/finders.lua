@@ -5,14 +5,38 @@ local finders = {}
 local api = require("linear.api")
 local state = require("linear.ui.telescope.state")
 local telescope_finders = require("telescope.finders")
+local utils = require("linear.utils")
 
 ---Transform issue data to Telescope entry format
 ---@param issue table Linear issue data
+---@param opts table? Options { show_assignee: boolean }
 ---@return table Formatted entry
-local function format_issue_entry(issue)
+local function format_issue_entry(issue, opts)
+	opts = opts or {}
+
+	local state_name = issue.state and issue.state.name or nil
+	local status_icon = utils.status_icon(state_name)
+	local priority_icon = utils.priority_icon(issue.priority)
+
+	-- Build display string: {status} {priority} {identifier} - {title} [(assignee)]
+	local parts = { status_icon }
+
+	if priority_icon ~= "" then
+		table.insert(parts, priority_icon)
+	end
+
+	table.insert(parts, issue.identifier .. " - " .. issue.title)
+
+	if opts.show_assignee then
+		local assignee = issue.assignee and issue.assignee.name or "Unassigned"
+		table.insert(parts, "(" .. assignee .. ")")
+	end
+
+	local display = table.concat(parts, " ")
+
 	return {
 		value = issue.id,
-		display = issue.identifier .. " - " .. issue.title,
+		display = display,
 		ordinal = issue.identifier .. " " .. issue.title,
 		path = issue.url,
 		_data = issue,
