@@ -32,10 +32,25 @@ function M.setup_commands()
 		desc = "Browse Linear teams",
 	})
 
-	vim.api.nvim_create_user_command("LinearCycle", function(_opts)
-		pickers.cycle_picker()
+	vim.api.nvim_create_user_command("LinearCycle", function(opts)
+		local args = opts.fargs or {}
+		local team_name = nil
+		local show_all = false
+
+		-- Parse arguments: ["team_name"] [all]
+		-- Use quotes for multi-word team names: :LinearCycle "Technical Debt" all
+		for _, arg in ipairs(args) do
+			if arg:lower() == "all" then
+				show_all = true
+			else
+				team_name = arg
+			end
+		end
+
+		pickers.cycle_picker({ show_all = show_all, team_name = team_name })
 	end, {
-		desc = "Browse current sprint/cycle issues for your team",
+		desc = "Browse current sprint/cycle issues ([\"team\"] [all])",
+		nargs = "*",
 	})
 end
 

@@ -199,12 +199,14 @@ function M.team_picker(opts)
 end
 
 ---Create cycle picker (current sprint for selected team)
----@param opts table? Picker options
+---@param opts table? Picker options { show_all: boolean, team_name: string? }
 ---@return void
 function M.cycle_picker(opts)
 	opts = opts or {}
 	local api = require("linear.api")
 	local utils = require("linear.utils")
+	local show_all = opts.show_all or false
+	local team_name = opts.team_name
 
 	-- First, fetch teams to let user select
 	api.get_teams(function(teams_data, teams_err)
@@ -220,9 +222,22 @@ function M.cycle_picker(opts)
 
 		local teams = teams_data.teams.nodes
 
+		-- If team name provided, find matching team (case-insensitive)
+		if team_name then
+			local team_name_lower = team_name:lower()
+			for _, team in ipairs(teams) do
+				if team.name:lower() == team_name_lower or team.name:lower():find(team_name_lower, 1, true) then
+					M._open_cycle_for_team(team, show_all)
+					return
+				end
+			end
+			-- Team not found, show warning and fall back to picker
+			utils.notify("Team '" .. team_name .. "' not found, showing picker", vim.log.levels.WARN)
+		end
+
 		-- If only one team, skip selection
 		if #teams == 1 then
-			M._open_cycle_for_team(teams[1], opts)
+			M._open_cycle_for_team(teams[1], show_all)
 			return
 		end
 
@@ -238,7 +253,7 @@ function M.cycle_picker(opts)
 					local selection = action_state.get_selected_entry()
 					if selection and selection._data then
 						telescope_actions.close(prompt_bufnr)
-						M._open_cycle_for_team(selection._data, opts)
+						M._open_cycle_for_team(selection._data, show_all)
 					end
 				end)
 				map("n", "<CR>", function()
@@ -246,7 +261,7 @@ function M.cycle_picker(opts)
 					local selection = action_state.get_selected_entry()
 					if selection and selection._data then
 						telescope_actions.close(prompt_bufnr)
-						M._open_cycle_for_team(selection._data, opts)
+						M._open_cycle_for_team(selection._data, show_all)
 					end
 				end)
 				map("i", "<C-c>", telescope_actions.close)
@@ -261,61 +276,93 @@ end
 
 ---Open cycle view for a specific team (internal)
 ---@param team table Team data
----@param opts table? Picker options
+---@param show_all boolean Whether to show all team issues or just current user's
 ---@return void
-function M._open_cycle_for_team(team, opts)
-	opts = opts or {}
+function M._open_cycle_for_team(team, show_all)
 	local api = require("linear.api")
 	local utils = require("linear.utils")
 
-	api.get_active_cycle(team.id, function(data, err)
-		if err then
-			utils.notify("Failed to fetch cycle: " .. err, vim.log.levels.ERROR)
-			return
-		end
-
-		if not data or not data.team or not data.team.activeCycle then
-			utils.notify("No active cycle for " .. team.name, vim.log.levels.WARN)
-			return
-		end
-
-		local cycle = data.team.activeCycle
-		local start_date = cycle.startsAt and cycle.startsAt:sub(1, 10) or "?"
-		local end_date = cycle.endsAt and cycle.endsAt:sub(1, 10) or "?"
-
-		local finder_obj = finders_module.cycle_issues(team.id, cycle)
-		local cfg = config.get()
-
-		local picker_opts = {
-			prompt_title = "Sprint: " .. cycle.name .. " (" .. start_date .. " - " .. end_date .. ")",
-			finder = finder_obj,
-			sorter = require("telescope.config").values.generic_sorter(opts),
-			attach_mappings = function(prompt_bufnr, map)
-				map("i", "<CR>", actions_module.open_in_browser)
-				map("n", "<CR>", actions_module.open_in_browser)
-				map("i", "<C-y>", actions_module.copy_identifier)
-				map("n", "<C-y>", actions_module.copy_identifier)
-				map("i", "<C-c>", telescope_actions.close)
-				map("n", "q", telescope_actions.close)
-				return true
-			end,
-		}
-
-		-- Add previewer if enabled
-		if cfg.ui.telescope.previewer then
-			picker_opts.previewer = previewer.make_previewer(opts)
-		end
-
-		-- Apply theme
-		if cfg.ui.telescope.theme and cfg.ui.telescope.theme ~= "" then
-			local theme_getter = require("telescope.themes")["get_" .. cfg.ui.telescope.theme]
-			if theme_getter then
-				picker_opts = theme_getter(picker_opts)
+	-- Fetch viewer first if filtering by current user
+	local function fetch_and_display(viewer_id)
+		api.get_active_cycle(team.id, function(data, err)
+			if err then
+				utils.notify("Failed to fetch cycle: " .. err, vim.log.levels.ERROR)
+				return
 			end
-		end
 
-		pickers.new(picker_opts):find()
-	end)
+			if not data or not data.team or not data.team.activeCycle then
+				utils.notify("No active cycle for " .. team.name, vim.log.levels.WARN)
+				return
+			end
+
+			local cycle = data.team.activeCycle
+			local start_date = cycle.startsAt and cycle.startsAt:sub(1, 10) or "?"
+			local end_date = cycle.endsAt and cycle.endsAt:sub(1, 10) or "?"
+
+			-- Filter issues if not showing all
+			local filtered_cycle = cycle
+			if not show_all and viewer_id and cycle.issues and cycle.issues.nodes then
+				local my_issues = {}
+				for _, issue in ipairs(cycle.issues.nodes) do
+					if issue.assignee and issue.assignee.id == viewer_id then
+						table.insert(my_issues, issue)
+					end
+				end
+				filtered_cycle = vim.tbl_extend("force", cycle, {
+					issues = { nodes = my_issues },
+				})
+			end
+
+			local finder_obj = finders_module.cycle_issues(team.id, filtered_cycle)
+			local cfg = config.get()
+
+			local view_indicator = show_all and " (Team)" or " (My Issues)"
+			local picker_opts = {
+				prompt_title = "Sprint: " .. cycle.name .. " (" .. start_date .. " - " .. end_date .. ")" .. view_indicator,
+				finder = finder_obj,
+				sorter = require("telescope.config").values.generic_sorter({}),
+				attach_mappings = function(prompt_bufnr, map)
+					map("i", "<CR>", actions_module.open_in_browser)
+					map("n", "<CR>", actions_module.open_in_browser)
+					map("i", "<C-y>", actions_module.copy_identifier)
+					map("n", "<C-y>", actions_module.copy_identifier)
+					map("i", "<C-c>", telescope_actions.close)
+					map("n", "q", telescope_actions.close)
+					return true
+				end,
+			}
+
+			-- Add previewer if enabled
+			if cfg.ui.telescope.previewer then
+				picker_opts.previewer = previewer.make_previewer({})
+			end
+
+			-- Apply theme
+			if cfg.ui.telescope.theme and cfg.ui.telescope.theme ~= "" then
+				local theme_getter = require("telescope.themes")["get_" .. cfg.ui.telescope.theme]
+				if theme_getter then
+					picker_opts = theme_getter(picker_opts)
+				end
+			end
+
+			pickers.new(picker_opts):find()
+		end)
+	end
+
+	if show_all then
+		-- Show all team issues
+		fetch_and_display(nil)
+	else
+		-- Fetch viewer to filter by current user
+		api.get_viewer(function(viewer_data, viewer_err)
+			if viewer_err or not viewer_data or not viewer_data.viewer then
+				utils.notify("Failed to fetch current user, showing all issues", vim.log.levels.WARN)
+				fetch_and_display(nil)
+				return
+			end
+			fetch_and_display(viewer_data.viewer.id)
+		end)
+	end
 end
 
 return M

@@ -564,6 +564,8 @@ function M.get_active_cycle(team_id, callback)
                 id
                 name
               }
+              createdAt
+              updatedAt
               url
             }
           }
