@@ -14,6 +14,7 @@ describe("linear.config", function()
 			local opts = {
 				api_key = "test-key",
 			}
+
 			local result = config.setup(opts)
 			assert.is_not_nil(result.api_key)
 			assert.equal(result.api_key, "test-key")
