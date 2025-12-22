@@ -283,4 +283,23 @@ function finders.teams(_filter_opts)
 	)
 end
 
+---Create finder for cycle issues (shows assignee)
+---@param team_id string Team ID
+---@param cycle_data table Cycle data with issues
+---@return table Telescope finder
+function finders.cycle_issues(team_id, cycle_data)
+	local results = {}
+
+	if cycle_data and cycle_data.issues and cycle_data.issues.nodes then
+		vim.list_extend(results, cycle_data.issues.nodes)
+	end
+
+	return telescope_finders.new_table({
+		results = results,
+		entry_maker = function(entry)
+			return format_issue_entry(entry, { show_assignee = true })
+		end,
+	})
+end
+
 return finders
