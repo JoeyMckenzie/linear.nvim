@@ -258,4 +258,27 @@ describe("linear.utils", function()
 			assert.equals("⚪", utils.status_icon(nil))
 		end)
 	end)
+
+	describe("priority_icon", function()
+		it("returns red circle for urgent (1)", function()
+			assert.equals("🔴", utils.priority_icon(1))
+		end)
+
+		it("returns up arrow for high (2)", function()
+			assert.equals("⬆️", utils.priority_icon(2))
+		end)
+
+		it("returns right arrow for medium (3)", function()
+			assert.equals("➡️", utils.priority_icon(3))
+		end)
+
+		it("returns down arrow for low (4)", function()
+			assert.equals("⬇️", utils.priority_icon(4))
+		end)
+
+		it("returns empty string for no priority (0 or nil)", function()
+			assert.equals("", utils.priority_icon(0))
+			assert.equals("", utils.priority_icon(nil))
+		end)
+	end)
 end)

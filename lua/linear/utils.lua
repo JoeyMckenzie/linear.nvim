@@ -168,4 +168,22 @@ function M.status_icon(state_name)
 	end
 end
 
+---Get priority icon for display
+---@param priority integer? The priority level (1=urgent, 2=high, 3=medium, 4=low, 0=none)
+---@return string
+function M.priority_icon(priority)
+	if not priority or priority == 0 then
+		return ""
+	end
+
+	local icons = {
+		[1] = "🔴", -- Urgent
+		[2] = "⬆️", -- High
+		[3] = "➡️", -- Medium
+		[4] = "⬇️", -- Low
+	}
+
+	return icons[priority] or ""
+end
+
 return M
