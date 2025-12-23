@@ -125,6 +125,7 @@ describe("linear.config", function()
 			assert.equal(result.ui.telescope.layout, "horizontal")
 			assert.equal(result.ui.telescope.width, 0.8)
 			assert.equal(result.ui.telescope.height, 0.8)
+			assert.equal(result.ui.telescope.preview_comment_limit, 5)
 		end)
 
 		it("has details configuration", function()

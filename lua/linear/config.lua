@@ -8,6 +8,7 @@
 ---@field width number
 ---@field height number
 ---@field layout string
+---@field preview_comment_limit number
 
 ---@class linear.DetailsConfig
 ---@field window_type string
@@ -55,6 +56,7 @@ local defaults = {
 			layout = "horizontal", -- "horizontal" (side-by-side) or "vertical"
 			width = 0.8,
 			height = 0.8,
+			preview_comment_limit = 5, -- Number of comments to show in preview (0 to disable)
 		},
 		details = {
 			window_type = "float",
