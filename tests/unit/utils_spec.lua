@@ -282,4 +282,129 @@ describe("linear.utils", function()
 			assert.equals("", utils.priority_icon(nil))
 		end)
 	end)
+
+	describe("pr_status", function()
+		it("returns empty string for nil attachments", function()
+			assert.equals("", utils.pr_status(nil))
+		end)
+
+		it("returns empty string for attachments without nodes", function()
+			assert.equals("", utils.pr_status({}))
+		end)
+
+		it("returns empty string for empty nodes", function()
+			assert.equals("", utils.pr_status({ nodes = {} }))
+		end)
+
+		it("returns empty string for non-GitHub attachments", function()
+			local attachments = {
+				nodes = {
+					{ sourceType = "Figma", subtitle = "Design file" },
+					{ sourceType = "Slack", subtitle = "Message" },
+				},
+			}
+			assert.equals("", utils.pr_status(attachments))
+		end)
+
+		it("returns [PR:merged] for merged PR", function()
+			local attachments = {
+				nodes = {
+					{ sourceType = "GitHub", subtitle = "Merged" },
+				},
+			}
+			assert.equals(" [PR:merged]", utils.pr_status(attachments))
+		end)
+
+		it("returns [PR:open] for open PR", function()
+			local attachments = {
+				nodes = {
+					{ sourceType = "GitHub", subtitle = "Open" },
+				},
+			}
+			assert.equals(" [PR:open]", utils.pr_status(attachments))
+		end)
+
+		it("returns [PR:closed] for closed PR", function()
+			local attachments = {
+				nodes = {
+					{ sourceType = "GitHub", subtitle = "Closed" },
+				},
+			}
+			assert.equals(" [PR:closed]", utils.pr_status(attachments))
+		end)
+
+		it("returns [PR:draft] for draft PR", function()
+			local attachments = {
+				nodes = {
+					{ sourceType = "GitHub", subtitle = "Draft" },
+				},
+			}
+			assert.equals(" [PR:draft]", utils.pr_status(attachments))
+		end)
+
+		it("handles case-insensitive sourceType", function()
+			local attachments = {
+				nodes = {
+					{ sourceType = "github", subtitle = "Merged" },
+				},
+			}
+			assert.equals(" [PR:merged]", utils.pr_status(attachments))
+		end)
+
+		it("handles case-insensitive subtitle", function()
+			local attachments = {
+				nodes = {
+					{ sourceType = "GitHub", subtitle = "MERGED" },
+				},
+			}
+			assert.equals(" [PR:merged]", utils.pr_status(attachments))
+		end)
+
+		it("returns [PR:open] for unknown status", function()
+			local attachments = {
+				nodes = {
+					{ sourceType = "GitHub", subtitle = "Some other status" },
+				},
+			}
+			assert.equals(" [PR:open]", utils.pr_status(attachments))
+		end)
+
+		it("returns [PR] for empty subtitle", function()
+			local attachments = {
+				nodes = {
+					{ sourceType = "GitHub", subtitle = "" },
+				},
+			}
+			assert.equals(" [PR]", utils.pr_status(attachments))
+		end)
+
+		it("handles nil subtitle", function()
+			local attachments = {
+				nodes = {
+					{ sourceType = "GitHub" },
+				},
+			}
+			assert.equals(" [PR]", utils.pr_status(attachments))
+		end)
+
+		it("finds GitHub PR among multiple attachments", function()
+			local attachments = {
+				nodes = {
+					{ sourceType = "Figma", subtitle = "Design" },
+					{ sourceType = "GitHub", subtitle = "Merged" },
+					{ sourceType = "Slack", subtitle = "Thread" },
+				},
+			}
+			assert.equals(" [PR:merged]", utils.pr_status(attachments))
+		end)
+
+		it("handles sourceType containing 'pull'", function()
+			local attachments = {
+				nodes = {
+					{ sourceType = "GitHubPullRequest", subtitle = "Open" },
+				},
+			}
+			assert.equals(" [PR:open]", utils.pr_status(attachments))
+		end)
+	end)
 end)

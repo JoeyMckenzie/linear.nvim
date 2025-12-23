@@ -24,7 +24,7 @@ ignore = { "212" }
 -- Tests are less strict
 files["tests/**"] = {
 	std = "lua51+nvim+busted",
-	ignore = { "212", "213", "542" },  -- unused args, variables, and empty blocks
+	ignore = { "212", "213", "542", "122" },  -- unused args, variables, empty blocks, setting read-only globals (io.popen mocking)
 	max_cyclomatic_complexity = 50,    -- tests can be more complex (includes JSON parser)
 }
 
