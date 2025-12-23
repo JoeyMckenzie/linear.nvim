@@ -241,7 +241,7 @@ describe("linear.commands", function()
 		end)
 
 		it("clears context when 'clear' argument provided", function()
-			context_state.identifier = "SUP-1234"
+			context_state.identifier = "PROJ-1234"
 			created_commands["LinearCurrent"].callback({ args = "clear" })
 
 			assert.is_nil(context_state.identifier)
@@ -250,38 +250,38 @@ describe("linear.commands", function()
 		end)
 
 		it("clears context case-insensitively", function()
-			context_state.identifier = "SUP-1234"
+			context_state.identifier = "PROJ-1234"
 			created_commands["LinearCurrent"].callback({ args = "CLEAR" })
 
 			assert.is_nil(context_state.identifier)
 		end)
 
 		it("validates issue before setting context", function()
-			created_commands["LinearCurrent"].callback({ args = "SUP-1234" })
+			created_commands["LinearCurrent"].callback({ args = "PROJ-1234" })
 
 			-- Should have triggered API call
 			assert.is_not_nil(api_callback)
 		end)
 
 		it("sets context on successful validation", function()
-			created_commands["LinearCurrent"].callback({ args = "sup-1234" })
+			created_commands["LinearCurrent"].callback({ args = "proj-1234" })
 
 			-- Simulate successful API response with exact match
 			api_callback({
 				issueSearch = {
 					nodes = {
-						{ identifier = "SUP-1234", title = "Test Issue" },
+						{ identifier = "PROJ-1234", title = "Test Issue" },
 					},
 				},
 			}, nil)
 
-			assert.equal("SUP-1234", context_state.identifier)
+			assert.equal("PROJ-1234", context_state.identifier)
 			assert.equal(1, #notifications)
-			assert.matches("context set to SUP%-1234", notifications[1].msg)
+			assert.matches("context set to PROJ%-1234", notifications[1].msg)
 		end)
 
 		it("shows error when issue not found", function()
-			created_commands["LinearCurrent"].callback({ args = "SUP-9999" })
+			created_commands["LinearCurrent"].callback({ args = "PROJ-9999" })
 
 			-- Simulate empty API response
 			api_callback({
@@ -296,13 +296,13 @@ describe("linear.commands", function()
 		end)
 
 		it("shows error when no exact match found", function()
-			created_commands["LinearCurrent"].callback({ args = "SUP-1234" })
+			created_commands["LinearCurrent"].callback({ args = "PROJ-1234" })
 
 			-- Simulate API response without exact match
 			api_callback({
 				issueSearch = {
 					nodes = {
-						{ identifier = "SUP-1235", title = "Similar Issue" },
+						{ identifier = "PROJ-1235", title = "Similar Issue" },
 					},
 				},
 			}, nil)
@@ -312,7 +312,7 @@ describe("linear.commands", function()
 		end)
 
 		it("shows error on API failure", function()
-			created_commands["LinearCurrent"].callback({ args = "SUP-1234" })
+			created_commands["LinearCurrent"].callback({ args = "PROJ-1234" })
 
 			-- Simulate API error
 			api_callback(nil, "Network error")
@@ -322,11 +322,11 @@ describe("linear.commands", function()
 		end)
 
 		it("opens picker when context is resolved", function()
-			context_state.identifier = "SUP-1234"
+			context_state.identifier = "PROJ-1234"
 			created_commands["LinearCurrent"].callback({ args = "" })
 
 			assert.is_true(picker_called)
-			assert.equal("SUP-1234", picker_identifier)
+			assert.equal("PROJ-1234", picker_identifier)
 		end)
 
 		it("shows notification when no context and not in git repo", function()

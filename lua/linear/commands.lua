@@ -105,7 +105,7 @@ function M.setup_commands()
 			if not context.is_git_repo() then
 				utils.notify("Not in a git repository", vim.log.levels.WARN)
 			else
-				utils.notify("No issue detected. Use :LinearCurrent SUP-1234 to set one.", vim.log.levels.INFO)
+				utils.notify("No issue detected. Use :LinearCurrent PROJ-1234 to set one.", vim.log.levels.INFO)
 			end
 			return
 		end

@@ -432,7 +432,7 @@ function M.get_issue_full(issue_id, callback)
 end
 
 ---Search issues by text query or identifier
----@param query_text string Search query (can be identifier like "SUP-7444" or text)
+---@param query_text string Search query (can be identifier like "PROJ-7444" or text)
 ---@param limit number Max results
 ---@param callback APICallback Callback with (data, error)
 function M.search_issues(query_text, limit, callback)
@@ -478,7 +478,7 @@ function M.search_issues(query_text, limit, callback)
   ]]
 
 	-- Build filter based on query type
-	-- Check if query looks like an identifier (e.g., "SUP-7444" or just "7444")
+	-- Check if query looks like an identifier (e.g., "PROJ-7444" or just "7444")
 	local filter
 	local number_match = query_text:match("%-?(%d+)$")
 

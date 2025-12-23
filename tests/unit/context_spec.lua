@@ -35,54 +35,54 @@ describe("linear.context", function()
 		end)
 
 		it("stores and retrieves identifier", function()
-			context.set("SUP-1234")
-			assert.equal("SUP-1234", context.get())
+			context.set("PROJ-1234")
+			assert.equal("PROJ-1234", context.get())
 		end)
 
 		it("clears context", function()
-			context.set("SUP-1234")
+			context.set("PROJ-1234")
 			context.clear()
 			assert.is_nil(context.get())
 		end)
 
 		it("overwrites previous context", function()
-			context.set("SUP-1234")
-			context.set("RAISE-999")
-			assert.equal("RAISE-999", context.get())
+			context.set("PROJ-1234")
+			context.set("PROJ-999")
+			assert.equal("PROJ-999", context.get())
 		end)
 	end)
 
 	describe("detect_from_branch()", function()
-		it("extracts identifier from feature/SUP-1234 branch", function()
+		it("extracts identifier from feature/PROJ-1234 branch", function()
 			io.popen = function(_cmd)
-				mock_handle.output = "feature/SUP-1234"
+				mock_handle.output = "feature/PROJ-1234"
 				return mock_handle
 			end
-			assert.equal("SUP-1234", context.detect_from_branch())
+			assert.equal("PROJ-1234", context.detect_from_branch())
 		end)
 
-		it("extracts identifier from SUP-1234-feature branch", function()
+		it("extracts identifier from PROJ-1234-feature branch", function()
 			io.popen = function(_cmd)
-				mock_handle.output = "SUP-1234-feature"
+				mock_handle.output = "PROJ-1234-feature"
 				return mock_handle
 			end
-			assert.equal("SUP-1234", context.detect_from_branch())
+			assert.equal("PROJ-1234", context.detect_from_branch())
 		end)
 
-		it("extracts identifier from fix/RAISE-999-bug branch", function()
+		it("extracts identifier from fix/PROJ-999-bug branch", function()
 			io.popen = function(_cmd)
-				mock_handle.output = "fix/RAISE-999-bug"
+				mock_handle.output = "fix/PROJ-999-bug"
 				return mock_handle
 			end
-			assert.equal("RAISE-999", context.detect_from_branch())
+			assert.equal("PROJ-999", context.detect_from_branch())
 		end)
 
 		it("extracts first identifier when multiple present", function()
 			io.popen = function(_cmd)
-				mock_handle.output = "SUP-1234-related-to-SUP-5678"
+				mock_handle.output = "PROJ-1234-related-to-PROJ-5678"
 				return mock_handle
 			end
-			assert.equal("SUP-1234", context.detect_from_branch())
+			assert.equal("PROJ-1234", context.detect_from_branch())
 		end)
 
 		it("handles single letter team prefix", function()
@@ -159,20 +159,20 @@ describe("linear.context", function()
 
 	describe("resolve()", function()
 		it("returns session context when set", function()
-			context.set("SUP-1234")
+			context.set("PROJ-1234")
 			io.popen = function(_cmd)
-				mock_handle.output = "feature/RAISE-999"
+				mock_handle.output = "feature/PROJ-999"
 				return mock_handle
 			end
-			assert.equal("SUP-1234", context.resolve())
+			assert.equal("PROJ-1234", context.resolve())
 		end)
 
 		it("falls back to branch detection when no session context", function()
 			io.popen = function(_cmd)
-				mock_handle.output = "feature/RAISE-999"
+				mock_handle.output = "feature/PROJ-999"
 				return mock_handle
 			end
-			assert.equal("RAISE-999", context.resolve())
+			assert.equal("PROJ-999", context.resolve())
 		end)
 
 		it("returns nil when no session context and no branch match", function()

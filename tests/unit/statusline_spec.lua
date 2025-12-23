@@ -77,16 +77,16 @@ describe("linear.statusline", function()
 
 		it("returns identifier immediately on first call", function()
 			mock_context.resolve = function()
-				return "SUP-1234"
+				return "PROJ-1234"
 			end
 
 			local result = statusline.get()
-			assert.equal("SUP-1234", result)
+			assert.equal("PROJ-1234", result)
 		end)
 
 		it("returns cached display on subsequent calls with same identifier", function()
 			mock_context.resolve = function()
-				return "SUP-1234"
+				return "PROJ-1234"
 			end
 
 			-- First call
@@ -97,7 +97,7 @@ describe("linear.statusline", function()
 				api_callback({
 					issueSearch = {
 						nodes = {
-							{ identifier = "SUP-1234", state = { name = "In Progress" } },
+							{ identifier = "PROJ-1234", state = { name = "In Progress" } },
 						},
 					},
 				}, nil)
@@ -105,24 +105,24 @@ describe("linear.statusline", function()
 
 			-- Second call should return cached display
 			local result = statusline.get()
-			assert.equal("🟡 SUP-1234", result)
+			assert.equal("🟡 PROJ-1234", result)
 		end)
 
 		it("updates display after successful API fetch", function()
 			mock_context.resolve = function()
-				return "SUP-1234"
+				return "PROJ-1234"
 			end
 
 			-- First call returns just identifier
 			local first = statusline.get()
-			assert.equal("SUP-1234", first)
+			assert.equal("PROJ-1234", first)
 
 			-- Simulate API response
 			if api_callback then
 				api_callback({
 					issueSearch = {
 						nodes = {
-							{ identifier = "SUP-1234", state = { name = "Done" } },
+							{ identifier = "PROJ-1234", state = { name = "Done" } },
 						},
 					},
 				}, nil)
@@ -130,13 +130,13 @@ describe("linear.statusline", function()
 
 			-- Now should return with icon
 			local second = statusline.get()
-			assert.equal("🟢 SUP-1234", second)
+			assert.equal("🟢 PROJ-1234", second)
 		end)
 
 		it("clears cache when identifier changes", function()
-			-- Start with SUP-1234
+			-- Start with PROJ-1234
 			mock_context.resolve = function()
-				return "SUP-1234"
+				return "PROJ-1234"
 			end
 			statusline.get()
 
@@ -145,7 +145,7 @@ describe("linear.statusline", function()
 				api_callback({
 					issueSearch = {
 						nodes = {
-							{ identifier = "SUP-1234", state = { name = "In Progress" } },
+							{ identifier = "PROJ-1234", state = { name = "In Progress" } },
 						},
 					},
 				}, nil)
@@ -153,17 +153,17 @@ describe("linear.statusline", function()
 
 			-- Change to different identifier
 			mock_context.resolve = function()
-				return "RAISE-999"
+				return "PROJ-999"
 			end
 
 			local result = statusline.get()
 			-- Should return new identifier (cache was invalidated)
-			assert.equal("RAISE-999", result)
+			assert.equal("PROJ-999", result)
 		end)
 
 		it("handles API errors gracefully", function()
 			mock_context.resolve = function()
-				return "SUP-1234"
+				return "PROJ-1234"
 			end
 
 			statusline.get()
@@ -175,12 +175,12 @@ describe("linear.statusline", function()
 
 			-- Should still return identifier without icon
 			local result = statusline.get()
-			assert.equal("SUP-1234", result)
+			assert.equal("PROJ-1234", result)
 		end)
 
 		it("handles empty API response gracefully", function()
 			mock_context.resolve = function()
-				return "SUP-1234"
+				return "PROJ-1234"
 			end
 
 			statusline.get()
@@ -192,12 +192,12 @@ describe("linear.statusline", function()
 
 			-- Should still return identifier without icon
 			local result = statusline.get()
-			assert.equal("SUP-1234", result)
+			assert.equal("PROJ-1234", result)
 		end)
 
 		it("handles no exact match in API response", function()
 			mock_context.resolve = function()
-				return "SUP-1234"
+				return "PROJ-1234"
 			end
 
 			statusline.get()
@@ -207,7 +207,7 @@ describe("linear.statusline", function()
 				api_callback({
 					issueSearch = {
 						nodes = {
-							{ identifier = "SUP-1235", state = { name = "Done" } },
+							{ identifier = "PROJ-1235", state = { name = "Done" } },
 						},
 					},
 				}, nil)
@@ -215,13 +215,13 @@ describe("linear.statusline", function()
 
 			-- Should still return identifier without icon
 			local result = statusline.get()
-			assert.equal("SUP-1234", result)
+			assert.equal("PROJ-1234", result)
 		end)
 
 		it("clears cache when context becomes nil", function()
 			-- Start with an issue
 			mock_context.resolve = function()
-				return "SUP-1234"
+				return "PROJ-1234"
 			end
 			statusline.get()
 
@@ -230,7 +230,7 @@ describe("linear.statusline", function()
 				api_callback({
 					issueSearch = {
 						nodes = {
-							{ identifier = "SUP-1234", state = { name = "In Progress" } },
+							{ identifier = "PROJ-1234", state = { name = "In Progress" } },
 						},
 					},
 				}, nil)
@@ -249,7 +249,7 @@ describe("linear.statusline", function()
 	describe("clear_cache()", function()
 		it("clears all cached values", function()
 			mock_context.resolve = function()
-				return "SUP-1234"
+				return "PROJ-1234"
 			end
 
 			-- Populate cache
@@ -258,21 +258,21 @@ describe("linear.statusline", function()
 				api_callback({
 					issueSearch = {
 						nodes = {
-							{ identifier = "SUP-1234", state = { name = "In Progress" } },
+							{ identifier = "PROJ-1234", state = { name = "In Progress" } },
 						},
 					},
 				}, nil)
 			end
 
 			-- Verify cache is populated
-			assert.equal("🟡 SUP-1234", statusline.get())
+			assert.equal("🟡 PROJ-1234", statusline.get())
 
 			-- Clear cache
 			statusline.clear_cache()
 
 			-- Next call should return just identifier (cache cleared)
 			local result = statusline.get()
-			assert.equal("SUP-1234", result)
+			assert.equal("PROJ-1234", result)
 		end)
 	end)
 
@@ -290,7 +290,7 @@ describe("linear.statusline", function()
 			end
 
 			mock_context.resolve = function()
-				return "SUP-1234"
+				return "PROJ-1234"
 			end
 
 			statusline.get()
@@ -300,7 +300,7 @@ describe("linear.statusline", function()
 					issueSearch = {
 						nodes = {
 							{
-								identifier = "SUP-1234",
+								identifier = "PROJ-1234",
 								state = { name = "In Progress" },
 								title = "Fix login bug",
 							},
@@ -310,7 +310,7 @@ describe("linear.statusline", function()
 			end
 
 			local result = statusline.get()
-			assert.equal("🟡 SUP-1234 - Fix login bug", result)
+			assert.equal("🟡 PROJ-1234 - Fix login bug", result)
 		end)
 
 		it("truncates long titles", function()
@@ -326,7 +326,7 @@ describe("linear.statusline", function()
 			end
 
 			mock_context.resolve = function()
-				return "SUP-1234"
+				return "PROJ-1234"
 			end
 
 			statusline.get()
@@ -336,7 +336,7 @@ describe("linear.statusline", function()
 					issueSearch = {
 						nodes = {
 							{
-								identifier = "SUP-1234",
+								identifier = "PROJ-1234",
 								state = { name = "Done" },
 								title = "This is a very long title that should be truncated",
 							},
@@ -346,7 +346,7 @@ describe("linear.statusline", function()
 			end
 
 			local result = statusline.get()
-			assert.equal("🟢 SUP-1234 - This is a…", result)
+			assert.equal("🟢 PROJ-1234 - This is a…", result)
 		end)
 
 		it("does not show title when show_title is false", function()
@@ -362,7 +362,7 @@ describe("linear.statusline", function()
 			end
 
 			mock_context.resolve = function()
-				return "SUP-1234"
+				return "PROJ-1234"
 			end
 
 			statusline.get()
@@ -372,7 +372,7 @@ describe("linear.statusline", function()
 					issueSearch = {
 						nodes = {
 							{
-								identifier = "SUP-1234",
+								identifier = "PROJ-1234",
 								state = { name = "In Progress" },
 								title = "Fix login bug",
 							},
@@ -382,7 +382,7 @@ describe("linear.statusline", function()
 			end
 
 			local result = statusline.get()
-			assert.equal("🟡 SUP-1234", result)
+			assert.equal("🟡 PROJ-1234", result)
 		end)
 
 		it("handles missing title gracefully when show_title is enabled", function()
@@ -398,7 +398,7 @@ describe("linear.statusline", function()
 			end
 
 			mock_context.resolve = function()
-				return "SUP-1234"
+				return "PROJ-1234"
 			end
 
 			statusline.get()
@@ -408,7 +408,7 @@ describe("linear.statusline", function()
 					issueSearch = {
 						nodes = {
 							{
-								identifier = "SUP-1234",
+								identifier = "PROJ-1234",
 								state = { name = "In Progress" },
 								-- no title
 							},
@@ -418,7 +418,7 @@ describe("linear.statusline", function()
 			end
 
 			local result = statusline.get()
-			assert.equal("🟡 SUP-1234", result)
+			assert.equal("🟡 PROJ-1234", result)
 		end)
 	end)
 end)

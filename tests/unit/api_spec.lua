@@ -534,7 +534,7 @@ describe("linear.api", function()
 				callback({ issues = { nodes = {} } }, nil)
 			end
 
-			api.search_issues("SUP-1234", 10, function() end)
+			api.search_issues("PROJ-1234", 10, function() end)
 
 			assert.is_not_nil(captured_filter)
 			assert.is_not_nil(captured_filter["or"])
@@ -572,7 +572,7 @@ describe("linear.api", function()
 			api.query = function(_query_str, _variables, callback)
 				callback({
 					issues = {
-						nodes = { { id = "1", identifier = "SUP-1" } },
+						nodes = { { id = "1", identifier = "PROJ-1" } },
 					},
 				}, nil)
 			end

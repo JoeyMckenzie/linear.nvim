@@ -12,7 +12,7 @@ function M.get()
 end
 
 ---Set the session context to an issue identifier
----@param identifier string The issue identifier (e.g., "SUP-1234")
+---@param identifier string The issue identifier (e.g., "PROJ-1234")
 function M.set(identifier)
 	current_identifier = identifier
 end
@@ -38,7 +38,7 @@ function M.detect_from_branch()
 		return nil
 	end
 
-	-- Match pattern like SUP-1234, RAISE-999, etc. anywhere in branch name
+	-- Match pattern like PROJ-1234, etc. anywhere in branch name
 	local identifier = branch:match("([A-Z]+-[0-9]+)")
 	return identifier
 end
