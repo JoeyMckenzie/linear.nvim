@@ -29,4 +29,10 @@ function M.setup(opts)
 	end
 end
 
+---Get statusline display string for current issue
+---@return string Formatted string like "🟡 SUP-1234" or "" if no issue
+function M.statusline()
+	return require("linear.statusline").get()
+end
+
 return M

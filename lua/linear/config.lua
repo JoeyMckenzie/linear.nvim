@@ -14,9 +14,14 @@
 ---@field width number
 ---@field height number
 
+---@class linear.StatuslineConfig
+---@field show_title boolean
+---@field title_max_length number
+
 ---@class linear.UIConfig
 ---@field telescope linear.TelescopeConfig
 ---@field details linear.DetailsConfig
+---@field statusline linear.StatuslineConfig
 
 ---@class linear.KeymapsConfig
 ---@field list_issues string
@@ -55,6 +60,10 @@ local defaults = {
 			window_type = "float",
 			width = 0.8,
 			height = 0.8,
+		},
+		statusline = {
+			show_title = false, -- Set to true to show issue title
+			title_max_length = 30, -- Truncate title to this length
 		},
 	},
 	keymaps = {
