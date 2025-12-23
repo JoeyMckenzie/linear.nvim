@@ -438,9 +438,10 @@ end
 function M.search_issues(query_text, limit, callback)
 	limit = limit or 50
 
+	-- Use issues query with or filter to search by identifier or title
 	local query = [[
-    query SearchIssues($query: String!, $first: Int) {
-      issueSearch(query: $query, first: $first) {
+    query SearchIssues($filter: IssueFilter, $first: Int) {
+      issues(filter: $filter, first: $first) {
         nodes {
           id
           identifier
@@ -464,6 +465,8 @@ function M.search_issues(query_text, limit, callback)
               url
             }
           }
+          createdAt
+          updatedAt
           url
         }
         pageInfo {
@@ -475,11 +478,28 @@ function M.search_issues(query_text, limit, callback)
   ]]
 
 	local variables = {
-		query = query_text,
+		filter = {
+			["or"] = {
+				{ identifier = { contains = query_text } },
+				{ title = { containsIgnoreCase = query_text } },
+			},
+		},
 		first = limit,
 	}
 
-	M.query(query, variables, callback)
+	-- Wrap callback to normalize response structure (issues vs issueSearch)
+	M.query(query, variables, function(data, err)
+		if err then
+			callback(nil, err)
+			return
+		end
+		-- Return data with issueSearch key for backward compatibility with finders
+		if data and data.issues then
+			callback({ issueSearch = data.issues }, nil)
+		else
+			callback(data, nil)
+		end
+	end)
 end
 
 ---Update an issue
