@@ -359,4 +359,100 @@ function M._open_cycle_for_team(team, show_all)
 	end
 end
 
+---Show the current working issue (from context or branch detection)
+---@param identifier string The issue identifier to display
+function M.current_issue(identifier)
+	local api = require("linear.api")
+	local utils = require("linear.utils")
+
+	-- Search for the issue by identifier
+	api.search_issues(identifier, 10, function(data, err)
+		if err then
+			utils.notify("Failed to fetch issue: " .. err, vim.log.levels.ERROR)
+			return
+		end
+
+		if not data or not data.issueSearch or not data.issueSearch.nodes or #data.issueSearch.nodes == 0 then
+			utils.notify("Issue " .. identifier .. " not found", vim.log.levels.WARN)
+			return
+		end
+
+		-- Find exact match by identifier
+		local issue = nil
+		for _, node in ipairs(data.issueSearch.nodes) do
+			if node.identifier == identifier then
+				issue = node
+				break
+			end
+		end
+
+		-- Fall back to first result if no exact match
+		if not issue then
+			issue = data.issueSearch.nodes[1]
+		end
+
+		-- Create single-item finder
+		local finder_obj = require("telescope.finders").new_table({
+			results = { issue },
+			entry_maker = function(entry)
+				local state_name = entry.state and entry.state.name or nil
+				local status_icon = utils.status_icon(state_name)
+				local priority_icon = utils.priority_icon(entry.priority)
+				local pr_status = utils.pr_status(entry.attachments)
+
+				local parts = { status_icon }
+				if priority_icon ~= "" then
+					table.insert(parts, priority_icon)
+				end
+				table.insert(parts, entry.identifier .. " - " .. entry.title)
+
+				local display = table.concat(parts, " ") .. pr_status
+
+				return {
+					value = entry.id,
+					display = display,
+					ordinal = entry.identifier .. " " .. entry.title,
+					path = entry.url,
+					_data = entry,
+				}
+			end,
+		})
+
+		local cfg = config.get()
+		local picker_opts = {
+			prompt_title = "Current Issue: " .. identifier,
+			finder = finder_obj,
+			sorter = require("telescope.config").values.generic_sorter({}),
+			attach_mappings = function(prompt_bufnr, map)
+				map("i", "<CR>", actions_module.open_in_browser)
+				map("n", "<CR>", actions_module.open_in_browser)
+				map("i", "<C-y>", actions_module.copy_identifier)
+				map("n", "<C-y>", actions_module.copy_identifier)
+				map("i", "<M-y>", actions_module.copy_url)
+				map("n", "<M-y>", actions_module.copy_url)
+				map("i", "<C-s>", actions_module.toggle_status)
+				map("n", "<C-s>", actions_module.toggle_status)
+				map("i", "<C-c>", telescope_actions.close)
+				map("n", "q", telescope_actions.close)
+				return true
+			end,
+		}
+
+		-- Add previewer if enabled
+		if cfg.ui.telescope.previewer then
+			picker_opts.previewer = previewer.make_previewer({})
+		end
+
+		-- Apply theme
+		if cfg.ui.telescope.theme and cfg.ui.telescope.theme ~= "" then
+			local theme_getter = require("telescope.themes")["get_" .. cfg.ui.telescope.theme]
+			if theme_getter then
+				picker_opts = theme_getter(picker_opts)
+			end
+		end
+
+		pickers.new(picker_opts):find()
+	end)
+end
+
 return M
