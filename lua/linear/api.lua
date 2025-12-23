@@ -431,14 +431,14 @@ function M.get_issue_full(issue_id, callback)
 	M.query(query, variables, callback)
 end
 
----Search issues by text query
----@param query_text string Search query
+---Search issues by text query or identifier
+---@param query_text string Search query (can be identifier like "SUP-7444" or text)
 ---@param limit number Max results
 ---@param callback APICallback Callback with (data, error)
 function M.search_issues(query_text, limit, callback)
 	limit = limit or 50
 
-	-- Use issues query with or filter to search by identifier or title
+	-- Use issues query with filter
 	local query = [[
     query SearchIssues($filter: IssueFilter, $first: Int) {
       issues(filter: $filter, first: $first) {
@@ -477,17 +477,36 @@ function M.search_issues(query_text, limit, callback)
     }
   ]]
 
-	local variables = {
+	-- Build filter based on query type
+	-- Check if query looks like an identifier (e.g., "SUP-7444" or just "7444")
+	local filter
+	local number_match = query_text:match("%-?(%d+)$")
+
+	if number_match then
+		-- Query contains a number - search by issue number OR title
+		local issue_number = tonumber(number_match)
 		filter = {
 			["or"] = {
-				{ identifier = { contains = query_text } },
+				{ number = { eq = issue_number } },
 				{ title = { containsIgnoreCase = query_text } },
 			},
-		},
+		}
+	else
+		-- Text search only - search title and description
+		filter = {
+			["or"] = {
+				{ title = { containsIgnoreCase = query_text } },
+				{ description = { contains = query_text } },
+			},
+		}
+	end
+
+	local variables = {
+		filter = filter,
 		first = limit,
 	}
 
-	-- Wrap callback to normalize response structure (issues vs issueSearch)
+	-- Wrap callback to normalize response structure
 	M.query(query, variables, function(data, err)
 		if err then
 			callback(nil, err)
