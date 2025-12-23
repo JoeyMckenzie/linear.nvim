@@ -60,12 +60,27 @@ local function create_picker_config(finder_obj, opts)
 		picker_opts.previewer = previewer.make_previewer(opts)
 	end
 
-	-- Apply theme from config
+	-- Apply theme or custom layout from config
 	if cfg.ui.telescope.theme and cfg.ui.telescope.theme ~= "" then
+		-- Use a built-in theme (dropdown, ivy, cursor)
 		local theme_getter = require("telescope.themes")["get_" .. cfg.ui.telescope.theme]
 		if theme_getter then
-			picker_opts = theme_getter(picker_opts)
+			picker_opts = theme_getter(vim.tbl_extend("force", picker_opts, {
+				layout_config = {
+					width = cfg.ui.telescope.width or 0.8,
+				},
+			}))
 		end
+	else
+		-- Use custom centered horizontal/vertical layout
+		picker_opts.layout_strategy = cfg.ui.telescope.layout or "horizontal"
+		picker_opts.layout_config = {
+			width = cfg.ui.telescope.width or 0.8,
+			height = cfg.ui.telescope.height or 0.8,
+			prompt_position = "top",
+			preview_width = 0.5,
+		}
+		picker_opts.sorting_strategy = "ascending"
 	end
 
 	return picker_opts
@@ -331,12 +346,25 @@ function M._open_cycle_for_team(team, show_all)
 				picker_opts.previewer = previewer.make_previewer({})
 			end
 
-			-- Apply theme
+			-- Apply theme or custom layout from config
 			if cfg.ui.telescope.theme and cfg.ui.telescope.theme ~= "" then
 				local theme_getter = require("telescope.themes")["get_" .. cfg.ui.telescope.theme]
 				if theme_getter then
-					picker_opts = theme_getter(picker_opts)
+					picker_opts = theme_getter(vim.tbl_extend("force", picker_opts, {
+						layout_config = {
+							width = cfg.ui.telescope.width or 0.8,
+						},
+					}))
 				end
+			else
+				picker_opts.layout_strategy = cfg.ui.telescope.layout or "horizontal"
+				picker_opts.layout_config = {
+					width = cfg.ui.telescope.width or 0.8,
+					height = cfg.ui.telescope.height or 0.8,
+					prompt_position = "top",
+					preview_width = 0.5,
+				}
+				picker_opts.sorting_strategy = "ascending"
 			end
 
 			pickers.new(picker_opts):find()
@@ -443,12 +471,25 @@ function M.current_issue(identifier)
 			picker_opts.previewer = previewer.make_previewer({})
 		end
 
-		-- Apply theme
+		-- Apply theme or custom layout from config
 		if cfg.ui.telescope.theme and cfg.ui.telescope.theme ~= "" then
 			local theme_getter = require("telescope.themes")["get_" .. cfg.ui.telescope.theme]
 			if theme_getter then
-				picker_opts = theme_getter(picker_opts)
+				picker_opts = theme_getter(vim.tbl_extend("force", picker_opts, {
+					layout_config = {
+						width = cfg.ui.telescope.width or 0.8,
+					},
+				}))
 			end
+		else
+			picker_opts.layout_strategy = cfg.ui.telescope.layout or "horizontal"
+			picker_opts.layout_config = {
+				width = cfg.ui.telescope.width or 0.8,
+				height = cfg.ui.telescope.height or 0.8,
+				prompt_position = "top",
+				preview_width = 0.5,
+			}
+			picker_opts.sorting_strategy = "ascending"
 		end
 
 		pickers.new(picker_opts):find()

@@ -5,6 +5,9 @@
 ---@class linear.TelescopeConfig
 ---@field theme string
 ---@field previewer boolean
+---@field width number
+---@field height number
+---@field layout string
 
 ---@class linear.DetailsConfig
 ---@field window_type string
@@ -42,8 +45,11 @@ local defaults = {
 	},
 	ui = {
 		telescope = {
-			theme = "dropdown",
+			theme = "", -- empty to use custom layout, or "dropdown", "ivy", "cursor"
 			previewer = true,
+			layout = "horizontal", -- "horizontal" (side-by-side) or "vertical"
+			width = 0.8,
+			height = 0.8,
 		},
 		details = {
 			window_type = "float",
