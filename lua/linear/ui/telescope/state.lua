@@ -2,12 +2,22 @@
 ---State management for Telescope picker views
 local M = {}
 
+---Current project context for navigation (projects → views → issues)
+---@type { id: string, name: string }?
+M.current_project = nil
+
+---Current view context for navigation
+---@type { id: string, name: string, project_id: string }?
+M.current_view = nil
+
 ---Cached data
 ---@type table
 M.cache = {
 	issues = {},
 	boards = {},
 	teams = {},
+	views = {}, -- keyed by project_id
+	view_issues = {}, -- keyed by view_id
 	last_update = 0,
 }
 
@@ -33,6 +43,24 @@ end
 ---Update cache timestamp
 function M.update_cache_time()
 	M.cache.last_update = os.time()
+end
+
+---Set current project context for navigation
+---@param project { id: string, name: string }?
+function M.set_current_project(project)
+	M.current_project = project
+end
+
+---Set current view context for navigation
+---@param view { id: string, name: string, project_id: string }?
+function M.set_current_view(view)
+	M.current_view = view
+end
+
+---Clear navigation state (both project and view)
+function M.clear_navigation()
+	M.current_project = nil
+	M.current_view = nil
 end
 
 return M
