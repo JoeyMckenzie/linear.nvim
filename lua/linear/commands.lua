@@ -115,6 +115,13 @@ function M.setup_commands()
 		desc = "View current working issue (auto-detected or manually set)",
 		nargs = "?",
 	})
+
+	vim.api.nvim_create_user_command("LinearBranch", function(_opts)
+		local branch = require("linear.branch")
+		branch.create_branch_from_context()
+	end, {
+		desc = "Create git branch from current issue context",
+	})
 end
 
 return M

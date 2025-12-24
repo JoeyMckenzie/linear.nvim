@@ -47,6 +47,10 @@ local function create_picker_config(finder_obj, opts)
 			map("i", "<C-b>", actions_module.navigate_board)
 			map("n", "<C-b>", actions_module.navigate_board)
 
+			-- Create git branch
+			map("i", "<C-g>", actions_module.create_branch)
+			map("n", "<C-g>", actions_module.create_branch)
+
 			-- Close picker with q
 			map("i", "<C-c>", telescope_actions.close)
 			map("n", "q", telescope_actions.close)
@@ -335,6 +339,8 @@ function M._open_cycle_for_team(team, show_all)
 					map("n", "<CR>", actions_module.open_in_browser)
 					map("i", "<C-y>", actions_module.copy_identifier)
 					map("n", "<C-y>", actions_module.copy_identifier)
+					map("i", "<C-g>", actions_module.create_branch)
+					map("n", "<C-g>", actions_module.create_branch)
 					map("i", "<C-c>", telescope_actions.close)
 					map("n", "q", telescope_actions.close)
 					return true
@@ -460,6 +466,8 @@ function M.current_issue(identifier)
 				map("n", "<M-y>", actions_module.copy_url)
 				map("i", "<C-s>", actions_module.toggle_status)
 				map("n", "<C-s>", actions_module.toggle_status)
+				map("i", "<C-g>", actions_module.create_branch)
+				map("n", "<C-g>", actions_module.create_branch)
 				map("i", "<C-c>", telescope_actions.close)
 				map("n", "q", telescope_actions.close)
 				return true

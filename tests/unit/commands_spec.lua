@@ -83,13 +83,19 @@ describe("linear.commands", function()
 			assert.equal(created_commands["LinearCurrent"].opts.nargs, "?")
 		end)
 
-		it("registers all 6 commands", function()
+		it("registers LinearBranch command", function()
+			commands.setup_commands()
+			assert.is_not_nil(created_commands["LinearBranch"])
+			assert.equal(created_commands["LinearBranch"].opts.desc, "Create git branch from current issue context")
+		end)
+
+		it("registers all 7 commands", function()
 			commands.setup_commands()
 			local count = 0
 			for _ in pairs(created_commands) do
 				count = count + 1
 			end
-			assert.equal(6, count)
+			assert.equal(7, count)
 		end)
 	end)
 

@@ -19,6 +19,10 @@
 ---@field show_title boolean
 ---@field title_max_length number
 
+---@class linear.BranchConfig
+---@field scopes string[]
+---@field lowercase_identifier boolean
+
 ---@class linear.UIConfig
 ---@field telescope linear.TelescopeConfig
 ---@field details linear.DetailsConfig
@@ -36,6 +40,7 @@
 ---@field default_filters linear.FilterConfig
 ---@field ui linear.UIConfig
 ---@field keymaps linear.KeymapsConfig
+---@field branch linear.BranchConfig
 
 ---@class linear.InternalConfig : linear.Config
 ---@field api_key? string
@@ -74,6 +79,10 @@ local defaults = {
 		close = "q",
 		update_status = "s",
 		add_comment = "c",
+	},
+	branch = {
+		scopes = { "feature", "bugfix", "task", "chore" },
+		lowercase_identifier = false,
 	},
 }
 

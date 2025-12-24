@@ -196,4 +196,22 @@ function M.refresh()
 	require("telescope.builtin").command_history()
 end
 
+---Create git branch for selected issue
+---@param prompt_bufnr number Telescope prompt buffer number
+function M.create_branch(prompt_bufnr)
+	local selection = get_selection(prompt_bufnr)
+	if not selection or not selection._data then
+		return
+	end
+
+	local issue = selection._data
+
+	-- Close picker first so prompts are visible
+	actions.close(prompt_bufnr)
+
+	-- Use branch module to create branch
+	local branch = require("linear.branch")
+	branch.create_branch_for_issue(issue)
+end
+
 return M
