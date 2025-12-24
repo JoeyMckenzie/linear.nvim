@@ -603,4 +603,127 @@ function M.get_active_cycle(team_id, callback)
 	M.query(query, { teamId = team_id }, callback)
 end
 
+---Get custom views for a specific project
+---@param project_id string The project ID
+---@param callback APICallback Callback with (data, error)
+function M.get_project_views(project_id, callback)
+	if not project_id or project_id == "" then
+		callback(nil, "project_id is required")
+		return
+	end
+
+	local query = [[
+    query GetProjectViews($projectId: String!) {
+      project(id: $projectId) {
+        id
+        name
+        customViews {
+          nodes {
+            id
+            name
+            description
+            icon
+            color
+            shared
+            team {
+              id
+              name
+            }
+          }
+        }
+      }
+    }
+  ]]
+
+	M.query(query, { projectId = project_id }, callback)
+end
+
+---Get all custom views the user has access to
+---@param callback APICallback Callback with (data, error)
+function M.get_custom_views(callback)
+	local query = [[
+    query GetCustomViews {
+      customViews {
+        nodes {
+          id
+          name
+          description
+          icon
+          color
+          shared
+          team {
+            id
+            name
+          }
+        }
+      }
+    }
+  ]]
+
+	M.query(query, {}, callback)
+end
+
+---Get issues for a specific custom view
+---@param view_id string The custom view ID
+---@param callback APICallback Callback with (data, error)
+function M.get_view_issues(view_id, callback)
+	if not view_id or view_id == "" then
+		callback(nil, "view_id is required")
+		return
+	end
+
+	local query = [[
+    query GetViewIssues($viewId: String!) {
+      customView(id: $viewId) {
+        id
+        name
+        issues {
+          nodes {
+            id
+            identifier
+            title
+            description
+            state {
+              id
+              name
+              color
+            }
+            priority
+            assignee {
+              id
+              name
+              avatarUrl
+            }
+            project {
+              id
+              name
+            }
+            team {
+              id
+              name
+            }
+            attachments {
+              nodes {
+                sourceType
+                title
+                subtitle
+                url
+              }
+            }
+            createdAt
+            updatedAt
+            url
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }
+    }
+  ]]
+
+	M.query(query, { viewId = view_id }, callback)
+end
+
 return M
