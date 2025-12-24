@@ -123,32 +123,4 @@ function M.show_issue_detail(issue_data)
 	create_float_window(lines, issue_data.identifier)
 end
 
----Show status change modal
----@param _issue_id string Issue ID
----@param _current_status string Current status name
----@param _states table Available states
----@param _callback function Callback when status is selected
-function M.show_status_modal(_issue_id, _current_status, _states, _callback)
-	-- Uses vim.ui.select instead - implementation not needed
-end
-
----Show comment editor
----@param _issue_id string Issue ID
----@param _callback function Callback with comment text
-function M.show_comment_editor(_issue_id, _callback)
-	-- Future implementation for adding comments
-end
-
----Close all linear UI windows
-function M.close_all()
-	-- Close all floating windows related to linear
-	for _, winnr in ipairs(vim.api.nvim_list_wins()) do
-		local cfg = vim.api.nvim_win_get_config(winnr)
-		-- Check if this is a floating window (has relative position)
-		if cfg.relative ~= "" then
-			vim.api.nvim_win_close(winnr, false)
-		end
-	end
-end
-
 return M

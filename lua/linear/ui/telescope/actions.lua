@@ -132,8 +132,6 @@ function M.toggle_status(prompt_bufnr)
 						vim.notify("Linear.nvim: Error updating status: " .. update_err, vim.log.levels.ERROR)
 					else
 						vim.notify("Linear.nvim: Updated " .. issue.identifier .. " status to " .. choice, vim.log.levels.INFO)
-						-- Refresh picker to show updated status
-						M.refresh()
 					end
 				end)
 			end
@@ -164,36 +162,6 @@ function M.navigate_board(prompt_bufnr)
 		filter = { project = { id = { eq = project.id } } },
 		prompt_title = "Issues in " .. project.name,
 	})
-end
-
----Navigate back to previous view
-function M.navigate_back()
-	local previous_view = state.history["issues"]
-	if not previous_view then
-		vim.notify("Linear.nvim: No previous view to navigate to", vim.log.levels.WARN)
-		return
-	end
-
-	-- Clear current view and restore previous
-	state.switch_view("issues", previous_view)
-
-	-- Reopen picker with previous context
-	local pickers = require("linear.ui.telescope.pickers")
-	pickers.issues(previous_view)
-end
-
----Refresh current picker
-function M.refresh()
-	-- Clear cache to force fresh data
-	state.clear_cache()
-
-	-- Notify user
-	vim.notify("Linear.nvim: Refreshing data...", vim.log.levels.INFO)
-
-	-- Close any open pickers and reopen
-	-- This is a simple approach - in a more advanced implementation,
-	-- we would refresh the current picker directly
-	require("telescope.builtin").command_history()
 end
 
 ---Create git branch for selected issue

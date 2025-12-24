@@ -7,6 +7,5 @@ M.pickers = require("linear.ui.telescope.pickers")
 M.actions = require("linear.ui.telescope.actions")
 M.state = require("linear.ui.telescope.state")
 M.previewer = require("linear.ui.telescope.previewer")
-M.sorters = require("linear.ui.telescope.sorters")
 
 return M
