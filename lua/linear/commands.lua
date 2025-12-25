@@ -122,6 +122,59 @@ function M.setup_commands()
 	end, {
 		desc = "Create git branch from current issue context",
 	})
+
+	vim.api.nvim_create_user_command("LinearProjects", function(_opts)
+		pickers.projects()
+	end, {
+		desc = "Browse Linear projects",
+	})
+
+	vim.api.nvim_create_user_command("LinearViews", function(opts)
+		local project_name = opts.args and opts.args ~= "" and opts.args or nil
+
+		if not project_name then
+			-- No argument: show all views
+			pickers.views()
+			return
+		end
+
+		-- Project name provided: search for project and set state before opening views
+		local api = require("linear.api")
+		local utils = require("linear.utils")
+		local state = require("linear.ui.telescope.state")
+
+		api.get_projects(function(data, err)
+			if err then
+				utils.notify("Failed to fetch projects: " .. err, vim.log.levels.ERROR)
+				return
+			end
+
+			if not data or not data.projects or not data.projects.nodes then
+				utils.notify("No projects found", vim.log.levels.WARN)
+				return
+			end
+
+			local projects = data.projects.nodes
+			local project_name_lower = project_name:lower()
+
+			-- Find matching project (case-insensitive partial match)
+			for _, project in ipairs(projects) do
+				if project.name:lower() == project_name_lower or project.name:lower():find(project_name_lower, 1, true) then
+					-- Set state and open views for this project
+					state.set_current_project({ id = project.id, name = project.name })
+					pickers.views(project.id)
+					return
+				end
+			end
+
+			-- Project not found, show warning and fall back to all views
+			utils.notify("Project '" .. project_name .. "' not found, showing all views", vim.log.levels.WARN)
+			pickers.views()
+		end)
+	end, {
+		desc = "Browse Linear views ([project-name])",
+		nargs = "?",
+	})
 end
 
 return M

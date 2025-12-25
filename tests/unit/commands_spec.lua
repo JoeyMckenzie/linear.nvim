@@ -15,6 +15,8 @@ local mock_pickers = {
 	team_picker = function() end,
 	cycle_picker = function() end,
 	current_issue = function() end,
+	projects = function() end,
+	views = function() end,
 }
 
 describe("linear.commands", function()
@@ -89,13 +91,26 @@ describe("linear.commands", function()
 			assert.equal(created_commands["LinearBranch"].opts.desc, "Create git branch from current issue context")
 		end)
 
-		it("registers all 7 commands", function()
+		it("registers LinearProjects command", function()
+			commands.setup_commands()
+			assert.is_not_nil(created_commands["LinearProjects"])
+			assert.equal(created_commands["LinearProjects"].opts.desc, "Browse Linear projects")
+		end)
+
+		it("registers LinearViews command", function()
+			commands.setup_commands()
+			assert.is_not_nil(created_commands["LinearViews"])
+			assert.equal(created_commands["LinearViews"].opts.desc, "Browse Linear views ([project-name])")
+			assert.equal(created_commands["LinearViews"].opts.nargs, "?")
+		end)
+
+		it("registers all 9 commands", function()
 			commands.setup_commands()
 			local count = 0
 			for _ in pairs(created_commands) do
 				count = count + 1
 			end
-			assert.equal(7, count)
+			assert.equal(9, count)
 		end)
 	end)
 
@@ -230,6 +245,8 @@ describe("linear.commands", function()
 				search_issues = function() end,
 				board_picker = function() end,
 				team_picker = function() end,
+				projects = function() end,
+				views = function() end,
 			}
 
 			-- Mock vim command creation
@@ -376,6 +393,8 @@ describe("linear.commands", function()
 				board_picker = function() end,
 				team_picker = function() end,
 				current_issue = function() end,
+				projects = function() end,
+				views = function() end,
 			}
 
 			-- Mock vim command creation
