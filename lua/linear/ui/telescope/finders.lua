@@ -69,6 +69,21 @@ local function format_team_entry(team)
 	}
 end
 
+---Transform view data to Telescope entry format
+---@param view table Linear custom view data
+---@return table Formatted entry
+local function format_view_entry(view)
+	-- Use icon if available, otherwise just the name
+	local display = view.icon and (view.icon .. " " .. view.name) or view.name
+
+	return {
+		value = view.id,
+		display = display,
+		ordinal = view.name .. " " .. (view.description or ""),
+		_data = view,
+	}
+end
+
 ---Helper to create a finder from API call
 ---@param api_fn function API function to call
 ---@param entry_maker function Function to format entries
@@ -115,10 +130,12 @@ end
 ---@param entry_maker function Function to format entries
 ---@param data_path string Path to data in response (e.g., "issues.nodes", "projects.nodes")
 ---@param cache_key string? Key for caching results
+---@param cache_type string? Cache type: "boards", "teams", "views", "view_issues"
 ---@return table Telescope finder
-local function async_finder(api_fn, entry_maker, data_path, cache_key)
+local function async_finder(api_fn, entry_maker, data_path, cache_key, cache_type)
 	local results = {}
-	local cache_field = data_path:match("^([^.]+)")
+	-- Use explicit cache_type if provided, otherwise infer from data_path
+	local cache_field = cache_type or data_path:match("^([^.]+)")
 
 	-- Check cache first
 	if cache_key and state.cache_valid() then
@@ -127,6 +144,10 @@ local function async_finder(api_fn, entry_maker, data_path, cache_key)
 			cached = state.cache.boards[cache_key]
 		elseif cache_field == "teams" and state.cache.teams[cache_key] then
 			cached = state.cache.teams[cache_key]
+		elseif cache_field == "views" and state.cache.views[cache_key] then
+			cached = state.cache.views[cache_key]
+		elseif cache_field == "view_issues" and state.cache.view_issues[cache_key] then
+			cached = state.cache.view_issues[cache_key]
 		end
 		if cached then
 			return telescope_finders.new_table({
@@ -162,6 +183,10 @@ local function async_finder(api_fn, entry_maker, data_path, cache_key)
 						state.cache.boards[cache_key] = current
 					elseif cache_field == "teams" then
 						state.cache.teams[cache_key] = current
+					elseif cache_field == "views" then
+						state.cache.views[cache_key] = current
+					elseif cache_field == "view_issues" then
+						state.cache.view_issues[cache_key] = current
 					end
 					state.update_cache_time()
 				end
@@ -301,6 +326,57 @@ function finders.cycle_issues(team_id, cycle_data)
 			return format_issue_entry(entry, { show_assignee = true })
 		end,
 	})
+end
+
+---Create finder for projects (alias to boards for semantic clarity)
+---@param filter_opts table? Filter options
+---@return table Telescope finder
+function finders.projects(filter_opts)
+	return finders.boards(filter_opts)
+end
+
+---Create finder for views of a specific project
+---@param project_id string Project ID
+---@return table Telescope finder
+function finders.views(project_id)
+	return async_finder(
+		function(callback)
+			api.get_project_views(project_id, callback)
+		end,
+		format_view_entry,
+		"project.customViews.nodes",
+		project_id,
+		"views"
+	)
+end
+
+---Create finder for all custom views
+---@return table Telescope finder
+function finders.all_views()
+	return async_finder(
+		function(callback)
+			api.get_custom_views(callback)
+		end,
+		format_view_entry,
+		"customViews.nodes",
+		"all",
+		"views"
+	)
+end
+
+---Create finder for issues in a specific view
+---@param view_id string View ID
+---@return table Telescope finder
+function finders.view_issues(view_id)
+	return async_finder(
+		function(callback)
+			api.get_view_issues(view_id, callback)
+		end,
+		format_issue_entry,
+		"customView.issues.nodes",
+		view_id,
+		"view_issues"
+	)
 end
 
 return finders
