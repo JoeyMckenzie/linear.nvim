@@ -122,6 +122,8 @@ require('linear').setup({
 | `:LinearIssues` | Browse issues assigned to you |
 | `:LinearIssuesAll` | Browse all issues |
 | `:LinearIssuesTeam` | Browse team issues |
+| `:LinearProjects` | Browse projects and their views |
+| `:LinearViews [project]` | Browse custom views (optionally filtered by project) |
 | `:LinearSetContext` | Set current issue context |
 | `:LinearContext` | Show current issue context |
 | `:LinearClearContext` | Clear current issue context |
@@ -143,6 +145,7 @@ Open with `:LinearIssues`, `:LinearIssuesAll`, or `:LinearIssuesTeam`.
 | `<C-s>` | i/n | Change issue status |
 | `<C-b>` | i/n | Navigate to project board |
 | `<C-g>` | i/n | Create git branch for issue |
+| `<C-v>` | i/n | Switch to views picker for current project |
 
 ## Branch Creation
 
@@ -159,6 +162,17 @@ Branch format: `{scope}/{identifier}[-{slugified-title}]`
 Examples:
 - `feature/PROJ-123`
 - `bugfix/PROJ-456-fix-login-validation`
+
+## Project & View Navigation
+
+Navigate through projects and custom views to quickly filter issues:
+
+- **`:LinearProjects`** - Browse all projects, select one to see its views, then select a view to see its issues
+- **`:LinearViews`** - Browse all custom views across your workspace
+- **`:LinearViews [project]`** - Browse views filtered to a specific project
+- **`<C-v>`** - While browsing issues, switch to the views picker for the current project
+
+This enables a natural workflow: start with `:LinearProjects` to explore, or use `:LinearViews` for quick access to saved filters.
 
 ## Statusline Integration
 
