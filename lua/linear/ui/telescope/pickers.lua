@@ -51,6 +51,16 @@ local function create_picker_config(finder_obj, opts)
 			map("i", "<C-g>", actions_module.create_branch)
 			map("n", "<C-g>", actions_module.create_branch)
 
+			-- Switch to views picker
+			local function switch_to_views()
+				telescope_actions.close(prompt_bufnr)
+				-- Use current project's ID if available, otherwise show all views
+				local project_id = state.current_project and state.current_project.id or nil
+				M.views(project_id)
+			end
+			map("i", "<C-v>", switch_to_views)
+			map("n", "<C-v>", switch_to_views)
+
 			-- Close picker with q
 			map("i", "<C-c>", telescope_actions.close)
 			map("n", "q", telescope_actions.close)
