@@ -393,6 +393,44 @@ function M._open_cycle_for_team(team, show_all)
 	end
 end
 
+---Create project picker for navigating to project views
+---@param opts table? Picker options
+function M.projects(opts)
+	opts = opts or {}
+	opts.prompt_title = "Linear Projects"
+
+	local finder_obj = finders_module.projects(opts)
+
+	local picker_opts = create_picker_config(finder_obj, opts)
+
+	-- Override mappings for project selection
+	picker_opts.attach_mappings = function(prompt_bufnr, map)
+		-- Select project: set state and navigate to views picker
+		local function select_project()
+			local action_state = require("telescope.actions.state")
+			local selection = action_state.get_selected_entry()
+			if selection and selection._data then
+				-- Set current project in state
+				state.set_current_project({ id = selection._data.id, name = selection._data.name })
+				telescope_actions.close(prompt_bufnr)
+				-- Navigate to views picker for this project
+				M.views(selection._data.id)
+			end
+		end
+
+		map("i", "<CR>", select_project)
+		map("n", "<CR>", select_project)
+
+		-- Close with q and Ctrl-c
+		map("i", "<C-c>", telescope_actions.close)
+		map("n", "q", telescope_actions.close)
+
+		return true
+	end
+
+	pickers.new(picker_opts):find()
+end
+
 ---Show the current working issue (from context or branch detection)
 ---@param identifier string The issue identifier to display
 function M.current_issue(identifier)
