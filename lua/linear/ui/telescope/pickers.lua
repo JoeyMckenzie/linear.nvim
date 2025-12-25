@@ -431,6 +431,114 @@ function M.projects(opts)
 	pickers.new(picker_opts):find()
 end
 
+---Create views picker (views for a project or all views)
+---@param project_id string? Optional project ID to filter views
+function M.views(project_id)
+	local finder_obj
+	local prompt_title
+
+	if project_id then
+		-- Views for a specific project
+		finder_obj = finders_module.views(project_id)
+		local project_name = state.current_project and state.current_project.name or "Project"
+		prompt_title = "Views: " .. project_name
+	else
+		-- All views
+		finder_obj = finders_module.all_views()
+		prompt_title = "All Views"
+	end
+
+	local picker_opts = create_picker_config(finder_obj, { prompt_title = prompt_title })
+
+	-- Override mappings for view selection
+	picker_opts.attach_mappings = function(prompt_bufnr, map)
+		-- Select view: set state and navigate to view issues
+		local function select_view()
+			local action_state = require("telescope.actions.state")
+			local selection = action_state.get_selected_entry()
+			if selection and selection._data then
+				-- Set current view in state
+				state.set_current_view({
+					id = selection._data.id,
+					name = selection._data.name,
+					project_id = project_id or (selection._data.project and selection._data.project.id),
+				})
+				telescope_actions.close(prompt_bufnr)
+				-- Navigate to view issues picker
+				M.view_issues(selection._data.id)
+			end
+		end
+
+		map("i", "<CR>", select_view)
+		map("n", "<CR>", select_view)
+
+		-- Close with q and Ctrl-c
+		map("i", "<C-c>", telescope_actions.close)
+		map("n", "q", telescope_actions.close)
+
+		return true
+	end
+
+	pickers.new(picker_opts):find()
+end
+
+---Create view issues picker (issues in a specific view)
+---@param view_id string View ID
+function M.view_issues(view_id)
+	local finder_obj = finders_module.view_issues(view_id)
+
+	-- Build title from state context
+	local view_name = state.current_view and state.current_view.name or "View"
+	local project_name = state.current_project and state.current_project.name or nil
+	local prompt_title
+	if project_name then
+		prompt_title = view_name .. " (" .. project_name .. ")"
+	else
+		prompt_title = view_name
+	end
+
+	local picker_opts = create_picker_config(finder_obj, { prompt_title = prompt_title })
+
+	-- Use existing issue picker mappings
+	picker_opts.attach_mappings = function(prompt_bufnr, map)
+		-- Default action: open in browser
+		map("i", "<CR>", actions_module.open_in_browser)
+		map("n", "<CR>", actions_module.open_in_browser)
+
+		-- Copy identifier
+		map("i", "<C-y>", actions_module.copy_identifier)
+		map("n", "<C-y>", actions_module.copy_identifier)
+
+		-- Copy URL
+		map("i", "<M-y>", actions_module.copy_url)
+		map("n", "<M-y>", actions_module.copy_url)
+
+		-- Toggle status
+		map("i", "<C-s>", actions_module.toggle_status)
+		map("n", "<C-s>", actions_module.toggle_status)
+
+		-- Show details
+		map("i", "<C-d>", actions_module.show_details)
+		map("n", "<C-d>", actions_module.show_details)
+
+		-- Navigate to board
+		map("i", "<C-b>", actions_module.navigate_board)
+		map("n", "<C-b>", actions_module.navigate_board)
+
+		-- Create git branch
+		map("i", "<C-g>", actions_module.create_branch)
+		map("n", "<C-g>", actions_module.create_branch)
+
+		-- Close picker with q
+		map("i", "<C-c>", telescope_actions.close)
+		map("n", "q", telescope_actions.close)
+
+		return true
+	end
+
+	pickers.new(picker_opts):find()
+end
+
 ---Show the current working issue (from context or branch detection)
 ---@param identifier string The issue identifier to display
 function M.current_issue(identifier)
