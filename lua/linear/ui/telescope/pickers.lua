@@ -3,12 +3,72 @@
 local M = {}
 
 local pickers = require("telescope.pickers")
+local telescope_finders = require("telescope.finders")
 local finders_module = require("linear.ui.telescope.finders")
 local actions_module = require("linear.ui.telescope.actions")
 local previewer = require("linear.ui.telescope.previewer")
 local state = require("linear.ui.telescope.state")
 local config = require("linear.config")
 local telescope_actions = require("telescope.actions")
+local api = require("linear.api")
+local utils = require("linear.utils")
+
+---Transform project data to Telescope entry format
+---@param project table Linear project data
+---@return table Formatted entry
+local function format_board_entry(project)
+	return {
+		value = project.id,
+		display = project.name,
+		ordinal = project.name .. " " .. (project.description or ""),
+		path = project.url,
+		_data = project,
+	}
+end
+
+---Transform view data to Telescope entry format
+---@param view table Linear custom view data
+---@return table Formatted entry
+local function format_view_entry(view)
+	-- Use icon if available, otherwise just the name
+	local display = view.icon and (view.icon .. " " .. view.name) or view.name
+
+	return {
+		value = view.id,
+		display = display,
+		ordinal = view.name .. " " .. (view.description or ""),
+		_data = view,
+	}
+end
+
+---Transform issue data to Telescope entry format
+---@param issue table Linear issue data
+---@return table Formatted entry
+local function format_issue_entry(issue)
+	local state_name = issue.state and issue.state.name or nil
+	local status_icon = utils.status_icon(state_name)
+	local priority_icon = utils.priority_icon(issue.priority)
+	local pr_status = utils.pr_status(issue.attachments)
+
+	-- Build display string: {status} {priority} {identifier} - {title} [PR:status]
+	local parts = { status_icon }
+
+	if priority_icon ~= "" then
+		table.insert(parts, priority_icon)
+	end
+
+	table.insert(parts, issue.identifier .. " - " .. issue.title)
+
+	local display = table.concat(parts, " ") .. pr_status
+
+	return {
+		value = issue.id,
+		display = display,
+		ordinal = issue.identifier .. " " .. issue.title,
+		path = issue.url,
+		_data = issue,
+	}
+end
 
 ---Helper to create base picker configuration
 ---@param finder_obj table Telescope finder object
@@ -227,8 +287,6 @@ end
 ---@param opts table? Picker options { show_all: boolean, team_name: string? }
 function M.cycle_picker(opts)
 	opts = opts or {}
-	local api = require("linear.api")
-	local utils = require("linear.utils")
 	local show_all = opts.show_all or false
 	local team_name = opts.team_name
 
@@ -302,9 +360,6 @@ end
 ---@param team table Team data
 ---@param show_all boolean Whether to show all team issues or just current user's
 function M._open_cycle_for_team(team, show_all)
-	local api = require("linear.api")
-	local utils = require("linear.utils")
-
 	-- Fetch viewer first if filtering by current user
 	local function fetch_and_display(viewer_id)
 		api.get_active_cycle(team.id, function(data, err)
@@ -404,99 +459,179 @@ function M._open_cycle_for_team(team, show_all)
 end
 
 ---Create project picker for navigating to project views
----@param opts table? Picker options
-function M.projects(opts)
-	opts = opts or {}
-	opts.prompt_title = "Linear Projects"
+---@param _opts table? Picker options (unused, for API consistency)
+function M.projects(_opts)
 
-	local finder_obj = finders_module.projects(opts)
+	-- Helper to open the picker with data
+	local function open_picker(projects)
+		local finder_obj = telescope_finders.new_table({
+			results = projects,
+			entry_maker = format_board_entry,
+		})
 
-	local picker_opts = create_picker_config(finder_obj, opts)
+		local picker_opts = create_picker_config(finder_obj, { prompt_title = "Linear Projects" })
 
-	-- Override mappings for project selection
-	picker_opts.attach_mappings = function(prompt_bufnr, map)
-		-- Select project: set state and navigate to views picker
-		local function select_project()
-			local action_state = require("telescope.actions.state")
-			local selection = action_state.get_selected_entry()
-			if selection and selection._data then
-				-- Set current project in state
-				state.set_current_project({ id = selection._data.id, name = selection._data.name })
-				telescope_actions.close(prompt_bufnr)
-				-- Navigate to views picker for this project
-				M.views(selection._data.id)
+		-- Override mappings for project selection
+		picker_opts.attach_mappings = function(prompt_bufnr, map)
+			-- Select project: set state and navigate to views picker
+			local function select_project()
+				local action_state = require("telescope.actions.state")
+				local selection = action_state.get_selected_entry()
+				if selection and selection._data then
+					-- Set current project in state
+					state.set_current_project({ id = selection._data.id, name = selection._data.name })
+					telescope_actions.close(prompt_bufnr)
+					-- Navigate to views picker for this project
+					M.views(selection._data.id)
+				end
 			end
+
+			map("i", "<CR>", select_project)
+			map("n", "<CR>", select_project)
+
+			-- Close with q and Ctrl-c
+			map("i", "<C-c>", telescope_actions.close)
+			map("n", "q", telescope_actions.close)
+
+			return true
 		end
 
-		map("i", "<CR>", select_project)
-		map("n", "<CR>", select_project)
-
-		-- Close with q and Ctrl-c
-		map("i", "<C-c>", telescope_actions.close)
-		map("n", "q", telescope_actions.close)
-
-		return true
+		pickers.new(picker_opts):find()
 	end
 
-	pickers.new(picker_opts):find()
+	-- Check cache first
+	if state.cache_valid() and state.cache.boards["projects"] then
+		open_picker(state.cache.boards["projects"])
+		return
+	end
+
+	-- Fetch data first, then open picker
+	utils.notify("Loading projects...", vim.log.levels.INFO)
+
+	api.get_projects(function(data, err)
+		if err then
+			utils.notify(err, vim.log.levels.ERROR)
+			return
+		end
+
+		local projects = data and data.projects and data.projects.nodes or {}
+
+		-- Cache the data
+		state.cache.boards["projects"] = projects
+		state.update_cache_time()
+
+		-- Open picker with loaded data
+		vim.schedule(function()
+			open_picker(projects)
+		end)
+	end)
 end
 
 ---Create views picker (views for a project or all views)
 ---@param project_id string? Optional project ID to filter views
 function M.views(project_id)
-	local finder_obj
 	local prompt_title
-
 	if project_id then
-		-- Views for a specific project
-		finder_obj = finders_module.views(project_id)
 		local project_name = state.current_project and state.current_project.name or "Project"
 		prompt_title = "Views: " .. project_name
 	else
-		-- All views
-		finder_obj = finders_module.all_views()
 		prompt_title = "All Views"
 	end
 
-	local picker_opts = create_picker_config(finder_obj, { prompt_title = prompt_title })
+	-- Helper to open the picker with data
+	local function open_picker(views)
+		local finder_obj = telescope_finders.new_table({
+			results = views,
+			entry_maker = format_view_entry,
+		})
 
-	-- Override mappings for view selection
-	picker_opts.attach_mappings = function(prompt_bufnr, map)
-		-- Select view: set state and navigate to view issues
-		local function select_view()
-			local action_state = require("telescope.actions.state")
-			local selection = action_state.get_selected_entry()
-			if selection and selection._data then
-				-- Set current view in state
-				state.set_current_view({
-					id = selection._data.id,
-					name = selection._data.name,
-					project_id = project_id or (selection._data.project and selection._data.project.id),
-				})
-				telescope_actions.close(prompt_bufnr)
-				-- Navigate to view issues picker
-				M.view_issues(selection._data.id)
+		local picker_opts = create_picker_config(finder_obj, { prompt_title = prompt_title })
+
+		-- Override mappings for view selection
+		picker_opts.attach_mappings = function(prompt_bufnr, map)
+			-- Select view: set state and navigate to view issues
+			local function select_view()
+				local action_state = require("telescope.actions.state")
+				local selection = action_state.get_selected_entry()
+				if selection and selection._data then
+					-- Set current view in state
+					state.set_current_view({
+						id = selection._data.id,
+						name = selection._data.name,
+						project_id = project_id or (selection._data.project and selection._data.project.id),
+					})
+					telescope_actions.close(prompt_bufnr)
+					-- Navigate to view issues picker
+					M.view_issues(selection._data.id)
+				end
 			end
+
+			map("i", "<CR>", select_view)
+			map("n", "<CR>", select_view)
+
+			-- Close with q and Ctrl-c
+			map("i", "<C-c>", telescope_actions.close)
+			map("n", "q", telescope_actions.close)
+
+			return true
 		end
 
-		map("i", "<CR>", select_view)
-		map("n", "<CR>", select_view)
-
-		-- Close with q and Ctrl-c
-		map("i", "<C-c>", telescope_actions.close)
-		map("n", "q", telescope_actions.close)
-
-		return true
+		pickers.new(picker_opts):find()
 	end
 
-	pickers.new(picker_opts):find()
+	-- Determine cache key based on whether we're fetching project views or all views
+	local cache_key = project_id or "all"
+
+	-- Check cache first
+	if state.cache_valid() and state.cache.views[cache_key] then
+		open_picker(state.cache.views[cache_key])
+		return
+	end
+
+	-- Fetch data first, then open picker
+	utils.notify("Loading views...", vim.log.levels.INFO)
+
+	local api_fn
+	local data_path
+	if project_id then
+		api_fn = function(callback)
+			api.get_project_views(project_id, callback)
+		end
+		data_path = { "project", "customViews", "nodes" }
+	else
+		api_fn = function(callback)
+			api.get_custom_views(callback)
+		end
+		data_path = { "customViews", "nodes" }
+	end
+
+	api_fn(function(data, err)
+		if err then
+			utils.notify(err, vim.log.levels.ERROR)
+			return
+		end
+
+		-- Navigate to the data path
+		local views = data
+		for _, key in ipairs(data_path) do
+			views = views and views[key]
+		end
+		views = views or {}
+
+		-- Cache the data
+		state.cache.views[cache_key] = views
+		state.update_cache_time()
+
+		-- Open picker with loaded data
+		vim.schedule(function()
+			open_picker(views)
+		end)
+	end)
 end
 
 ---Create view issues picker (issues in a specific view)
 ---@param view_id string View ID
 function M.view_issues(view_id)
-	local finder_obj = finders_module.view_issues(view_id)
-
 	-- Build title from state context
 	local view_name = state.current_view and state.current_view.name or "View"
 	local project_name = state.current_project and state.current_project.name or nil
@@ -507,54 +642,86 @@ function M.view_issues(view_id)
 		prompt_title = view_name
 	end
 
-	local picker_opts = create_picker_config(finder_obj, { prompt_title = prompt_title })
+	-- Helper to open the picker with data
+	local function open_picker(issues)
+		local finder_obj = telescope_finders.new_table({
+			results = issues,
+			entry_maker = format_issue_entry,
+		})
 
-	-- Use existing issue picker mappings
-	picker_opts.attach_mappings = function(prompt_bufnr, map)
-		-- Default action: open in browser
-		map("i", "<CR>", actions_module.open_in_browser)
-		map("n", "<CR>", actions_module.open_in_browser)
+		local picker_opts = create_picker_config(finder_obj, { prompt_title = prompt_title })
 
-		-- Copy identifier
-		map("i", "<C-y>", actions_module.copy_identifier)
-		map("n", "<C-y>", actions_module.copy_identifier)
+		-- Use existing issue picker mappings
+		picker_opts.attach_mappings = function(prompt_bufnr, map)
+			-- Default action: open in browser
+			map("i", "<CR>", actions_module.open_in_browser)
+			map("n", "<CR>", actions_module.open_in_browser)
 
-		-- Copy URL
-		map("i", "<M-y>", actions_module.copy_url)
-		map("n", "<M-y>", actions_module.copy_url)
+			-- Copy identifier
+			map("i", "<C-y>", actions_module.copy_identifier)
+			map("n", "<C-y>", actions_module.copy_identifier)
 
-		-- Toggle status
-		map("i", "<C-s>", actions_module.toggle_status)
-		map("n", "<C-s>", actions_module.toggle_status)
+			-- Copy URL
+			map("i", "<M-y>", actions_module.copy_url)
+			map("n", "<M-y>", actions_module.copy_url)
 
-		-- Show details
-		map("i", "<C-d>", actions_module.show_details)
-		map("n", "<C-d>", actions_module.show_details)
+			-- Toggle status
+			map("i", "<C-s>", actions_module.toggle_status)
+			map("n", "<C-s>", actions_module.toggle_status)
 
-		-- Navigate to board
-		map("i", "<C-b>", actions_module.navigate_board)
-		map("n", "<C-b>", actions_module.navigate_board)
+			-- Show details
+			map("i", "<C-d>", actions_module.show_details)
+			map("n", "<C-d>", actions_module.show_details)
 
-		-- Create git branch
-		map("i", "<C-g>", actions_module.create_branch)
-		map("n", "<C-g>", actions_module.create_branch)
+			-- Navigate to board
+			map("i", "<C-b>", actions_module.navigate_board)
+			map("n", "<C-b>", actions_module.navigate_board)
 
-		-- Close picker with q
-		map("i", "<C-c>", telescope_actions.close)
-		map("n", "q", telescope_actions.close)
+			-- Create git branch
+			map("i", "<C-g>", actions_module.create_branch)
+			map("n", "<C-g>", actions_module.create_branch)
 
-		return true
+			-- Close picker with q
+			map("i", "<C-c>", telescope_actions.close)
+			map("n", "q", telescope_actions.close)
+
+			return true
+		end
+
+		pickers.new(picker_opts):find()
 	end
 
-	pickers.new(picker_opts):find()
+	-- Check cache first
+	if state.cache_valid() and state.cache.view_issues[view_id] then
+		open_picker(state.cache.view_issues[view_id])
+		return
+	end
+
+	-- Fetch data first, then open picker
+	utils.notify("Loading issues...", vim.log.levels.INFO)
+
+	api.get_view_issues(view_id, function(data, err)
+		if err then
+			utils.notify(err, vim.log.levels.ERROR)
+			return
+		end
+
+		local issues = data and data.customView and data.customView.issues and data.customView.issues.nodes or {}
+
+		-- Cache the data
+		state.cache.view_issues[view_id] = issues
+		state.update_cache_time()
+
+		-- Open picker with loaded data
+		vim.schedule(function()
+			open_picker(issues)
+		end)
+	end)
 end
 
 ---Show the current working issue (from context or branch detection)
 ---@param identifier string The issue identifier to display
 function M.current_issue(identifier)
-	local api = require("linear.api")
-	local utils = require("linear.utils")
-
 	-- Search for the issue by identifier
 	api.search_issues(identifier, 10, function(data, err)
 		if err then
