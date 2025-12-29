@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(superpowers:using-superpowers)",
+      "Bash(tree:*)",
+      "Bash(find:*)",
+      "Bash(git -C /Users/joeymckenzie/code/github.com/joeymckenzie/linear.nvim log --oneline)",
+      "Skill(superpowers:systematic-debugging)",
+      "Bash(just test:*)",
+      "Bash(busted:*)",
+      "Bash(just lint:*)",
+      "Skill(superpowers:brainstorming)",
+      "Bash(mkdir:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\ndocs: add cycle view and enhanced display design\n\nDesign document for:\n- Icon-based status/priority indicators in issue list\n- New :LinearCycle command for team sprint view\n- Team picker flow for multi-team users\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Skill(superpowers:writing-plans)",
+      "Skill(superpowers:subagent-driven-development)",
+      "Bash(just type-check:*)",
+      "Bash(git commit:*)",
+      "Bash(just format:*)",
+      "WebSearch",
+      "WebFetch(domain:developers.linear.app)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:linear.app)",
+      "WebFetch(domain:studio.apollographql.com)",
+      "WebFetch(domain:pipedream.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(ls:*)"
+    ]
+  }
+}

@@ -121,6 +121,12 @@ local function create_picker_config(finder_obj, opts)
 			map("i", "<C-v>", switch_to_views)
 			map("n", "<C-v>", switch_to_views)
 
+			-- Preview scrolling
+			map("i", "<C-j>", telescope_actions.preview_scrolling_down)
+			map("n", "<C-j>", telescope_actions.preview_scrolling_down)
+			map("i", "<C-k>", telescope_actions.preview_scrolling_up)
+			map("n", "<C-k>", telescope_actions.preview_scrolling_up)
+
 			-- Close picker with q
 			map("i", "<C-c>", telescope_actions.close)
 			map("n", "q", telescope_actions.close)
@@ -406,6 +412,10 @@ function M._open_cycle_for_team(team, show_all)
 					map("n", "<C-y>", actions_module.copy_identifier)
 					map("i", "<C-g>", actions_module.create_branch)
 					map("n", "<C-g>", actions_module.create_branch)
+					map("i", "<C-j>", telescope_actions.preview_scrolling_down)
+					map("n", "<C-j>", telescope_actions.preview_scrolling_down)
+					map("i", "<C-k>", telescope_actions.preview_scrolling_up)
+					map("n", "<C-k>", telescope_actions.preview_scrolling_up)
 					map("i", "<C-c>", telescope_actions.close)
 					map("n", "q", telescope_actions.close)
 					return true
@@ -681,6 +691,12 @@ function M.view_issues(view_id)
 			map("i", "<C-g>", actions_module.create_branch)
 			map("n", "<C-g>", actions_module.create_branch)
 
+			-- Preview scrolling
+			map("i", "<C-j>", telescope_actions.preview_scrolling_down)
+			map("n", "<C-j>", telescope_actions.preview_scrolling_down)
+			map("i", "<C-k>", telescope_actions.preview_scrolling_up)
+			map("n", "<C-k>", telescope_actions.preview_scrolling_up)
+
 			-- Close picker with q
 			map("i", "<C-c>", telescope_actions.close)
 			map("n", "q", telescope_actions.close)
@@ -791,6 +807,10 @@ function M.current_issue(identifier)
 				map("n", "<C-s>", actions_module.toggle_status)
 				map("i", "<C-g>", actions_module.create_branch)
 				map("n", "<C-g>", actions_module.create_branch)
+				map("i", "<C-j>", telescope_actions.preview_scrolling_down)
+				map("n", "<C-j>", telescope_actions.preview_scrolling_down)
+				map("i", "<C-k>", telescope_actions.preview_scrolling_up)
+				map("n", "<C-k>", telescope_actions.preview_scrolling_up)
 				map("i", "<C-c>", telescope_actions.close)
 				map("n", "q", telescope_actions.close)
 				return true

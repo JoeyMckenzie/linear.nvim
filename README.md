@@ -146,6 +146,8 @@ Open with `:LinearIssues`, `:LinearIssuesAll`, or `:LinearIssuesTeam`.
 | `<C-b>` | i/n | Navigate to project board |
 | `<C-g>` | i/n | Create git branch for issue |
 | `<C-v>` | i/n | Switch to views picker for current project |
+| `<C-j>` | i/n | Scroll preview down |
+| `<C-k>` | i/n | Scroll preview up |
 
 ## Branch Creation
 
